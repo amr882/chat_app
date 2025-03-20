@@ -1,9 +1,11 @@
 import 'package:chat_app/auth/sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthServices {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
   // create account
 
   Future<void> createAccount(
@@ -12,10 +14,14 @@ class AuthServices {
     BuildContext context,
   ) async {
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
+      _firebaseFirestore.collection("users").doc(credential.user!.uid).set({
+        "Uid": credential.user!.uid,
+        "Uemail": credential.user!.email,
+      }, SetOptions(merge: true));
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil("homePage", (route) => false);
@@ -37,10 +43,14 @@ class AuthServices {
     BuildContext context,
   ) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
+      _firebaseFirestore.collection("users").doc(credential.user!.uid).set({
+        "Uid": credential.user!.uid,
+        "Uemail": credential.user!.email,
+      }, SetOptions(merge: true));
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil("homePage", (route) => false);
