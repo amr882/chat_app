@@ -33,9 +33,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Form(
       key: widget.formState,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.6.h),
+        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
         child: TextFormField(
-          style: GoogleFonts.rubik(color: Colors.white),
+          style: GoogleFonts.rubik(color: const Color.fromARGB(255, 0, 0, 0)),
           cursorColor: Colors.black,
           obscureText: widget.obscureText,
           controller: widget.controller,
@@ -51,7 +51,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             filled: true,
             fillColor: Color(0xfff2f2f2),
             hintStyle: TextStyle(
-              color: Color(0xff797979),
+              color: Color.fromARGB(255, 0, 0, 0),
               fontWeight: FontWeight.w400,
               fontSize: 1.8.h,
             ),

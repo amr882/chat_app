@@ -1,4 +1,4 @@
-import 'package:chat_app/auth/log_in.dart';
+import 'package:chat_app/auth/sign_in.dart';
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/view/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,7 +40,9 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home:
-              FirebaseAuth.instance.currentUser == null ? LogIn() : HomePage(),
+              FirebaseAuth.instance.currentUser == null ? SignIn() : HomePage(),
+
+          routes: {'homePage': (context) => HomePage(), "signIn":(context) => SignIn(),},
         );
       },
     );
