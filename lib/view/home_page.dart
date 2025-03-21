@@ -1,4 +1,5 @@
 import 'package:chat_app/auth/services/auth_services.dart';
+import 'package:chat_app/view/chat_room.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future signOut() async {
+    AuthServices().signOut();
+
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: _usersList());
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(onPressed: signOut, icon: Icon(Icons.exit_to_app)),
+        ],
+      ),
+      body: _usersList(),
+    );
   }
 
   Widget _usersList() {
@@ -40,25 +55,22 @@ class _HomePageState extends State<HomePage> {
   Widget _usersListBuilder(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
     if (data["Uemail"] != _auth.currentUser!.email) {
-      return ListTile(title: Text(data["Uemail"]));
+      return GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder:
+                  (context) => ChatRoom(
+                    receverEmail: data["Uemail"],
+                    receverId: data["Uid"],
+                  ),
+            ),
+          );
+        },
+        child: ListTile(title: Text(data["Uemail"])),
+      );
     } else {
       return Container();
     }
   }
 }
-
-
-
-
-
-
-
-//   Future signOut()async{
-//        AuthServices().signOut();
-//   }
-//   @override
-//   void initState() {
-// signOut();
-// Navigator.of(context).pop();
-//     super.initState();
-//   }
