@@ -39,6 +39,7 @@ dependencies:
   cloud_firestore: ^5.6.5
   sizer: ^3.0.5
   google_fonts: ^6.2.1
+  flutter_profile_picture: ^2.0.0
 
 dev_dependencies:
   flutter_test:

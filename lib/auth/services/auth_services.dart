@@ -9,8 +9,10 @@ class AuthServices {
   // create account
 
   Future<void> createAccount(
+    String userName,
     String emailAddress,
     String password,
+
     BuildContext context,
   ) async {
     try {
@@ -19,6 +21,7 @@ class AuthServices {
         password: password,
       );
       _firebaseFirestore.collection("users").doc(credential.user!.uid).set({
+        "Uname": userName,
         "Uid": credential.user!.uid,
         "Uemail": credential.user!.email,
       }, SetOptions(merge: true));

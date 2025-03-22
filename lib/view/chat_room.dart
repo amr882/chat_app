@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 class ChatRoom extends StatefulWidget {
   final String receverEmail;
   final String receverId;
+  final String receverName;
   const ChatRoom({
     super.key,
     required this.receverEmail,
     required this.receverId,
+    required this.receverName,
   });
 
   @override

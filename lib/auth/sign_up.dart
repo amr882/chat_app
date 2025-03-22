@@ -14,11 +14,13 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   // controllers
+  TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
 
   //keys
+  GlobalKey<FormState> nameFormState = GlobalKey();
   GlobalKey<FormState> emailFormState = GlobalKey();
   GlobalKey<FormState> passwordFormState = GlobalKey();
   GlobalKey<FormState> confirnPasswordFormState = GlobalKey();
@@ -50,6 +52,7 @@ class _SignUpState extends State<SignUp> {
     }
 
     services.createAccount(
+      nameController.text,
       emailController.text,
       confirmPasswordController.text,
       context,
@@ -60,52 +63,65 @@ class _SignUpState extends State<SignUp> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Create a \nnew account",
-              style: GoogleFonts.inter(fontSize: 9.w),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 2.h),
-            CustomTextField(
-              formState: emailFormState,
-              obscureText: false,
-              controller: emailController,
-              textInputType: TextInputType.emailAddress,
-              hintText: 'Email',
-              prefixIcon: Icon(Icons.person_rounded),
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Create a \nnew account",
+                style: GoogleFonts.inter(fontSize: 9.w),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 2.h),
+              // userName
+              CustomTextField(
+                formState: nameFormState,
+                obscureText: false,
+                controller: nameController,
+                textInputType: TextInputType.name,
+                hintText: 'Name',
+                prefixIcon: Icon(Icons.person_rounded),
+              ),
 
-            // password
-            CustomTextField(
-              formState: passwordFormState,
-              obscureText: true,
-              controller: passwordController,
-              textInputType: TextInputType.name,
-              hintText: 'Password',
-              prefixIcon: Icon(Icons.lock_outline_rounded),
-            ),
-            // confirm password
-            CustomTextField(
-              formState: confirnPasswordFormState,
-              obscureText: true,
-              controller: confirmPasswordController,
-              textInputType: TextInputType.name,
-              hintText: 'Confirm Password',
-              prefixIcon: Icon(Icons.lock_outline_rounded),
-            ),
-            SizedBox(height: 2.h),
+              // email
+              CustomTextField(
+                formState: emailFormState,
+                obscureText: false,
+                controller: emailController,
+                textInputType: TextInputType.emailAddress,
+                hintText: 'Email',
+                prefixIcon: Icon(Icons.person_rounded),
+              ),
 
-            CustomButton(
-              onTap: () {
-                signUp();
-              },
-              title: "SignUp",
-              width: 100.w,
-            ),
-          ],
+              // password
+              CustomTextField(
+                formState: passwordFormState,
+                obscureText: true,
+                controller: passwordController,
+                textInputType: TextInputType.name,
+                hintText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline_rounded),
+              ),
+              // confirm password
+              CustomTextField(
+                formState: confirnPasswordFormState,
+                obscureText: true,
+                controller: confirmPasswordController,
+                textInputType: TextInputType.name,
+                hintText: 'Confirm Password',
+                prefixIcon: Icon(Icons.lock_outline_rounded),
+              ),
+              SizedBox(height: 2.h),
+
+              CustomButton(
+                onTap: () {
+                  signUp();
+                },
+                title: "SignUp",
+                width: 100.w,
+              ),
+            ],
+          ),
         ),
       ),
     );
