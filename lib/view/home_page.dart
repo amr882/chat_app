@@ -1,5 +1,4 @@
 import 'package:chat_app/auth/services/auth_services.dart';
-import 'package:chat_app/view/chat_room.dart';
 import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,9 +48,9 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          // actions: [
-          //   IconButton(onPressed: signOut, icon: Icon(Icons.exit_to_app)),
-          // ],
+          actions: [
+            IconButton(onPressed: signOut, icon: Icon(Icons.exit_to_app)),
+          ],
         ),
         body: Column(
           children: [Row(children: []), Expanded(child: _usersList())],

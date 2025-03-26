@@ -40,6 +40,9 @@ dependencies:
   sizer: ^3.0.5
   google_fonts: ^6.2.1
   flutter_profile_picture: ^2.0.0
+  supabase_flutter: ^2.8.4
+  image_picker: ^1.1.2
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

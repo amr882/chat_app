@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:chat_app/auth/services/auth_services.dart';
 import 'package:chat_app/widgets/custom_button.dart';
 import 'package:chat_app/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -24,8 +28,9 @@ class _SignUpState extends State<SignUp> {
   GlobalKey<FormState> emailFormState = GlobalKey();
   GlobalKey<FormState> passwordFormState = GlobalKey();
   GlobalKey<FormState> confirnPasswordFormState = GlobalKey();
+
   // auth
-  Future<void> signUp() async {
+  Future<void> signUp(BuildContext context) async {
     var services = AuthServices();
 
     if (!RegExp(
@@ -50,13 +55,33 @@ class _SignUpState extends State<SignUp> {
       ).showSnackBar(SnackBar(content: Text("password not match")));
       return;
     }
-
+    // get file url
+ 
     services.createAccount(
       nameController.text,
       emailController.text,
       confirmPasswordController.text,
-      context,
     );
+    Navigator.of(context).pushNamedAndRemoveUntil("homePage", (route) => false);
+  }
+
+  File? imageFile;
+  pickImage() async {
+    ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      imageFile = File(image!.path);
+    });
+    uploadImage();
+  }
+
+  Future uploadImage() async {
+    if (imageFile == null) return;
+    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final path = "uploads/$fileName";
+    await Supabase.instance.client.storage
+        .from("chatpfp")
+        .upload(path, imageFile!);
   }
 
   @override
@@ -73,6 +98,23 @@ class _SignUpState extends State<SignUp> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 2.h),
+
+              GestureDetector(
+                onTap: () {
+                  pickImage();
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    color: const Color.fromARGB(255, 196, 193, 193),
+                  ),
+                  width: 12.h,
+                  height: 12.h,
+                  child: Center(
+                    child: Icon(Icons.upload_rounded, color: Colors.white),
+                  ),
+                ),
+              ),
               // userName
               CustomTextField(
                 formState: nameFormState,
@@ -115,7 +157,7 @@ class _SignUpState extends State<SignUp> {
 
               CustomButton(
                 onTap: () {
-                  signUp();
+                  signUp(context);
                 },
                 title: "SignUp",
                 width: 100.w,
