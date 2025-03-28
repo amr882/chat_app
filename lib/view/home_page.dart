@@ -1,4 +1,5 @@
 import 'package:chat_app/auth/services/auth_services.dart';
+import 'package:chat_app/view/chat_room.dart';
 import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -84,7 +85,9 @@ class _HomePageState extends State<HomePage> {
     if (data["Uemail"] != _auth.currentUser!.email) {
       return FriendChat(
         firendPhoto:
-            "https://i.pinimg.com/736x/25/62/be/2562beb757b9ef9735ee01a1de370f04.jpg",
+            data["pfp"].toString()==""
+                ? "https://i.pinimg.com/736x/25/62/be/2562beb757b9ef9735ee01a1de370f04.jpg"
+                : data["pfp"].toString(),
         friendName: data["Uname"],
         lastMessage: 'last message',
       );

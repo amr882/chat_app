@@ -29,8 +29,9 @@ class _SignUpState extends State<SignUp> {
   GlobalKey<FormState> passwordFormState = GlobalKey();
   GlobalKey<FormState> confirnPasswordFormState = GlobalKey();
 
+  String pfpUrl = "";
   // auth
-  Future<void> signUp(BuildContext context) async {
+  Future<void> signUp() async {
     var services = AuthServices();
 
     if (!RegExp(
@@ -55,14 +56,14 @@ class _SignUpState extends State<SignUp> {
       ).showSnackBar(SnackBar(content: Text("password not match")));
       return;
     }
-    // get file url
- 
+
     services.createAccount(
       nameController.text,
       emailController.text,
       confirmPasswordController.text,
+      context,
+      pfpUrl,
     );
-    Navigator.of(context).pushNamedAndRemoveUntil("homePage", (route) => false);
   }
 
   File? imageFile;
@@ -82,6 +83,14 @@ class _SignUpState extends State<SignUp> {
     await Supabase.instance.client.storage
         .from("chatpfp")
         .upload(path, imageFile!);
+    final res = Supabase.instance.client.storage
+        .from('chatpfp')
+        .getPublicUrl('uploads/$fileName');
+    if (mounted) {
+      setState(() {
+        pfpUrl = res;
+      });
+    }
   }
 
   @override
@@ -98,7 +107,6 @@ class _SignUpState extends State<SignUp> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 2.h),
-
               GestureDetector(
                 onTap: () {
                   pickImage();
@@ -111,7 +119,18 @@ class _SignUpState extends State<SignUp> {
                   width: 12.h,
                   height: 12.h,
                   child: Center(
-                    child: Icon(Icons.upload_rounded, color: Colors.white),
+                    child:
+                        imageFile == null
+                            ? Icon(Icons.upload_rounded, color: Colors.white)
+                            : ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: Image.file(
+                                imageFile!,
+                                fit: BoxFit.cover,
+                                width: 12.h,
+                                height: 12.h,
+                              ),
+                            ),
                   ),
                 ),
               ),
@@ -157,7 +176,7 @@ class _SignUpState extends State<SignUp> {
 
               CustomButton(
                 onTap: () {
-                  signUp(context);
+                  signUp();
                 },
                 title: "SignUp",
                 width: 100.w,

@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +11,8 @@ class AuthServices {
     String userName,
     String emailAddress,
     String password,
+    BuildContext context,
+    String pfp,
   ) async {
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -23,7 +23,11 @@ class AuthServices {
         "Uname": userName,
         "Uid": credential.user!.uid,
         "Uemail": credential.user!.email,
+        "pfp": pfp,
       }, SetOptions(merge: true));
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil("homePage", (route) => false);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
