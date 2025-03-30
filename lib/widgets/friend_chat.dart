@@ -16,10 +16,9 @@ class FriendChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.5.h),
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 0.5.h),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
             begin: Alignment.centerLeft,
@@ -31,8 +30,8 @@ class FriendChat extends StatelessWidget {
         padding: EdgeInsets.all(1),
         child: Center(
           child: Container(
-            width: 100.w,
-            height: 13.h,
+            width: 85.w,
+            height: 12.h,
             decoration: BoxDecoration(
               color: Color(0xff1f1f1f),
               borderRadius: BorderRadius.circular(22),
@@ -48,7 +47,12 @@ class FriendChat extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(50),
-                          child: Image.network(firendPhoto),
+                          child: Image.network(
+                            firendPhoto,
+                            fit: BoxFit.cover,
+                            width: 8.h,
+                            height: 8.h,
+                          ),
                         ),
                         SizedBox(width: 20),
                         Column(

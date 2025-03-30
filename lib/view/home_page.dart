@@ -83,30 +83,28 @@ class _HomePageState extends State<HomePage> {
   Widget _usersListBuilder(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
     if (data["Uemail"] != _auth.currentUser!.email) {
-      return FriendChat(
-        firendPhoto:
-            data["pfp"].toString()==""
-                ? "https://i.pinimg.com/736x/25/62/be/2562beb757b9ef9735ee01a1de370f04.jpg"
-                : data["pfp"].toString(),
-        friendName: data["Uname"],
-        lastMessage: 'last message',
+      return GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder:
+                  (context) => ChatRoom(
+                    receverEmail: data["Uemail"],
+                    receverId: data["Uid"],
+                    receverName: data["Uemail"],
+                  ),
+            ),
+          );
+        },
+        child: FriendChat(
+          firendPhoto:
+              data["pfp"].toString() == ""
+                  ? "https://i.pinimg.com/736x/25/62/be/2562beb757b9ef9735ee01a1de370f04.jpg"
+                  : data["pfp"].toString(),
+          friendName: data["Uname"],
+          lastMessage: 'last message',
+        ),
       );
-
-      //  GestureDetector(
-      //   onTap: () {
-      //     Navigator.of(context).push(
-      //       MaterialPageRoute(
-      //         builder:
-      //             (context) => ChatRoom(
-      //               receverEmail: data["Uemail"],
-      //               receverId: data["Uid"],
-      //               receverName: data["Uemail"],
-      //             ),
-      //       ),
-      //     );
-      //   },
-      //   child: ListTile(title: Text(data["Uname"] ?? data["Uemail"])),
-      // );
     } else {
       return Container();
     }

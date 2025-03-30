@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:chat_app/auth/services/auth_services.dart';
@@ -30,6 +32,7 @@ class _SignUpState extends State<SignUp> {
   GlobalKey<FormState> confirnPasswordFormState = GlobalKey();
 
   String pfpUrl = "";
+  bool isLoading = false;
   // auth
   Future<void> signUp() async {
     var services = AuthServices();
@@ -67,28 +70,46 @@ class _SignUpState extends State<SignUp> {
   }
 
   File? imageFile;
+
   pickImage() async {
     ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      imageFile = File(image!.path);
-    });
-    uploadImage();
+
+    if (image != null) {
+      imageFile = File(image.path);
+      setState(() {
+        isLoading = true;
+      });
+      await uploadImage();
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  Future uploadImage() async {
+  Future<void> uploadImage() async {
     if (imageFile == null) return;
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final path = "uploads/$fileName";
-    await Supabase.instance.client.storage
-        .from("chatpfp")
-        .upload(path, imageFile!);
-    final res = Supabase.instance.client.storage
-        .from('chatpfp')
-        .getPublicUrl('uploads/$fileName');
-    if (mounted) {
+    try {
+      await Supabase.instance.client.storage
+          .from("chatpfp")
+          .upload(path, imageFile!);
+      final res = Supabase.instance.client.storage
+          .from('chatpfp')
+          .getPublicUrl('uploads/$fileName');
+      if (mounted) {
+        setState(() {
+          pfpUrl = res;
+        });
+      }
+    } catch (e) {
+      print("Error uploading image: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to upload image.")));
       setState(() {
-        pfpUrl = res;
+        isLoading = false;
       });
     }
   }
@@ -122,18 +143,29 @@ class _SignUpState extends State<SignUp> {
                     child:
                         imageFile == null
                             ? Icon(Icons.upload_rounded, color: Colors.white)
+                            : isLoading
+                            ? Center(child: CircularProgressIndicator())
                             : ClipRRect(
                               borderRadius: BorderRadius.circular(50),
-                              child: Image.file(
-                                imageFile!,
-                                fit: BoxFit.cover,
-                                width: 12.h,
-                                height: 12.h,
-                              ),
+                              child:
+                                  pfpUrl.isNotEmpty
+                                      ? Image.network(
+                                        pfpUrl,
+                                        fit: BoxFit.cover,
+                                        width: 12.h,
+                                        height: 12.h,
+                                      )
+                                      : Image.file(
+                                        imageFile!,
+                                        fit: BoxFit.cover,
+                                        width: 12.h,
+                                        height: 12.h,
+                                      ),
                             ),
                   ),
                 ),
               ),
+
               // userName
               CustomTextField(
                 formState: nameFormState,
