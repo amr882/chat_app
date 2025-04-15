@@ -16,14 +16,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
   Future signOut() async {
     AuthServices().signOut();
 
     Navigator.of(context).pushNamedAndRemoveUntil("signIn", (route) => false);
   }
 
-  // 1c0d29
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -60,53 +59,90 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Stream<QuerySnapshot> _usersStream() {
+    return _firebaseFirestore.collection("users").snapshots();
+  }
+
+  Stream<String?> _lastMessageStream(String receiverId) {
+    try {
+      List<String> ids = [_auth.currentUser!.uid, receiverId];
+      ids.sort();
+      String chatRoomId = ids.join("_");
+
+      return _firebaseFirestore
+          .collection("chatRoom")
+          .doc(chatRoomId)
+          .collection("messages")
+          .orderBy("timestamp", descending: true)
+          .limit(1)
+          .snapshots()
+          .map((snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              return snapshot.docs.first["senderId"] == _auth.currentUser!.uid
+                  ? "✓✓  ${snapshot.docs.first["message"]}"
+                  : "${snapshot.docs.first["message"]}";
+            }
+            return null;
+          });
+    } catch (e) {
+      print("Error getting latest message stream: $e");
+      return Stream.value(null);
+    }
+  }
+
   Widget _usersList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection("users").snapshots(),
+      stream: _usersStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.connectionState == ConnectionState.none) {
-          return Center(child: Text("error getting users List"));
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text("Error getting users list: ${snapshot.error}"),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No users found."));
         }
 
         return ListView(
           children:
-              snapshot.data!.docs
-                  .map<Widget>((e) => _usersListBuilder(e))
-                  .toList(),
+              snapshot.data!.docs.map<Widget>((document) {
+                Map<String, dynamic> userData =
+                    document.data() as Map<String, dynamic>;
+                if (userData["Uemail"] != _auth.currentUser!.email) {
+                  return StreamBuilder<String?>(
+                    stream: _lastMessageStream(userData["Uid"]),
+                    builder: (context, lastMessageSnapshot) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ChatRoom(
+                                    receverEmail: userData["Uemail"],
+                                    receverId: userData["Uid"],
+                                    receverName: userData["Uemail"],
+                                  ),
+                            ),
+                          );
+                        },
+                        child: FriendChat(
+                          firendPhoto:
+                              userData["pfp"].toString().isEmpty
+                                  ? "https://i.pinimg.com/736x/59/af/9c/59af9cd100daf9aa154cc753dd58316d.jpg"
+                                  : userData["pfp"].toString(),
+                          friendName: userData["Uname"],
+                          lastMessage: lastMessageSnapshot.data ?? "",
+                        ),
+                      );
+                    },
+                  );
+                } else {
+                  return Container();
+                }
+              }).toList(),
         );
       },
     );
-  }
-
-  Widget _usersListBuilder(DocumentSnapshot document) {
-    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-    if (data["Uemail"] != _auth.currentUser!.email) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder:
-                  (context) => ChatRoom(
-                    receverEmail: data["Uemail"],
-                    receverId: data["Uid"],
-                    receverName: data["Uemail"],
-                  ),
-            ),
-          );
-        },
-        child: FriendChat(
-          firendPhoto:
-              data["pfp"].toString() == ""
-                  ? "https://i.pinimg.com/736x/25/62/be/2562beb757b9ef9735ee01a1de370f04.jpg"
-                  : data["pfp"].toString(),
-          friendName: data["Uname"],
-          lastMessage: 'last message',
-        ),
-      );
-    } else {
-      return Container();
-    }
   }
 }
