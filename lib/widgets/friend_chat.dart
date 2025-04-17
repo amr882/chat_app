@@ -6,11 +6,13 @@ class FriendChat extends StatelessWidget {
   final String firendPhoto;
   final String friendName;
   final String lastMessage;
+  final bool hasPhoto;
   const FriendChat({
     super.key,
     required this.firendPhoto,
     required this.friendName,
     required this.lastMessage,
+    required this.hasPhoto,
   });
 
   @override
@@ -47,12 +49,20 @@ class FriendChat extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(50),
-                          child: Image.network(
-                            firendPhoto,
-                            fit: BoxFit.cover,
-                            width: 8.h,
-                            height: 8.h,
-                          ),
+                          child:
+                              hasPhoto
+                                  ? Image.network(
+                                    firendPhoto,
+                                    fit: BoxFit.cover,
+                                    width: 8.h,
+                                    height: 8.h,
+                                  )
+                                  : Image.asset(
+                                    "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
+                                    fit: BoxFit.cover,
+                                    width: 8.h,
+                                    height: 8.h,
+                                  ),
                         ),
                         SizedBox(width: 20),
                         Column(

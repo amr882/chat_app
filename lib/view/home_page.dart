@@ -53,7 +53,11 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         body: Column(
-          children: [Row(children: []), Expanded(child: _usersList())],
+          children: [
+            // all users
+            SizedBox(height: 10.h, child: _allUsers()),
+            Expanded(child: _chatList()),
+          ],
         ),
       ),
     );
@@ -61,6 +65,46 @@ class _HomePageState extends State<HomePage> {
 
   Stream<QuerySnapshot> _usersStream() {
     return _firebaseFirestore.collection("users").snapshots();
+  }
+
+  Widget _allUsers() {
+    return StreamBuilder(
+      stream: _usersStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text("Error getting users list: ${snapshot.error}"),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No users found."));
+        }
+        return SizedBox(
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children:
+                snapshot.data!.docs.map<Widget>((document) {
+                  Map<String, dynamic> userData =
+                      document.data() as Map<String, dynamic>;
+
+                  if (userData["Uemail"] != _auth.currentUser!.email) {
+                    return Container(
+                      width: 10.h,
+                      height: 10.h,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    );
+                  } else {
+                    return Container();
+                  }
+                }).toList(),
+          ),
+        );
+      },
+    );
   }
 
   Stream<String?> _lastMessageStream(String receiverId) {
@@ -90,7 +134,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _usersList() {
+  Stream hasMessages(String receiverId) {
+    List<String> ids = [_auth.currentUser!.uid, receiverId];
+    ids.sort();
+    String chatRoomId = ids.join("_");
+    return _firebaseFirestore
+        .collection("chatRoom")
+        .doc(chatRoomId)
+        .collection("messages")
+        .snapshots()
+        .map((snapshot) => snapshot.docs.isNotEmpty);
+  }
+
+  Widget _chatList() {
     return StreamBuilder<QuerySnapshot>(
       stream: _usersStream(),
       builder: (context, snapshot) {
@@ -109,32 +165,41 @@ class _HomePageState extends State<HomePage> {
               snapshot.data!.docs.map<Widget>((document) {
                 Map<String, dynamic> userData =
                     document.data() as Map<String, dynamic>;
+
                 if (userData["Uemail"] != _auth.currentUser!.email) {
-                  return StreamBuilder<String?>(
-                    stream: _lastMessageStream(userData["Uid"]),
-                    builder: (context, lastMessageSnapshot) {
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ChatRoom(
-                                    receverEmail: userData["Uemail"],
-                                    receverId: userData["Uid"],
-                                    receverName: userData["Uemail"],
+                  return StreamBuilder(
+                    stream: hasMessages(userData["Uid"]),
+                    builder: (context, snapshot) {
+                      if (snapshot.data == true) {
+                        return StreamBuilder<String?>(
+                          stream: _lastMessageStream(userData["Uid"]),
+                          builder: (context, lastMessageSnapshot) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => ChatRoom(
+                                          receverEmail: userData["Uemail"],
+                                          receverId: userData["Uid"],
+                                          receverName: userData["Uemail"],
+                                        ),
                                   ),
-                            ),
-                          );
-                        },
-                        child: FriendChat(
-                          firendPhoto:
-                              userData["pfp"].toString().isEmpty
-                                  ? "https://i.pinimg.com/736x/59/af/9c/59af9cd100daf9aa154cc753dd58316d.jpg"
-                                  : userData["pfp"].toString(),
-                          friendName: userData["Uname"],
-                          lastMessage: lastMessageSnapshot.data ?? "",
-                        ),
-                      );
+                                );
+                              },
+                              child: FriendChat(
+                                hasPhoto: userData["pfp"].toString().isNotEmpty,
+                                firendPhoto: userData["pfp"].toString(),
+
+                                friendName: userData["Uname"],
+                                lastMessage: lastMessageSnapshot.data ?? "",
+                              ),
+                            );
+                          },
+                        );
+                      } else {
+                        return Container();
+                      }
                     },
                   );
                 } else {

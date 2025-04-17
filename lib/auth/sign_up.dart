@@ -124,7 +124,7 @@ class _SignUpState extends State<SignUp> {
             children: [
               Text(
                 "Create a \nnew account",
-                style: GoogleFonts.inter(fontSize: 9.w),
+                style: GoogleFonts.inter(fontSize: 7.w),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 2.h),
