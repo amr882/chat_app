@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,7 +56,12 @@ class _HomePageState extends State<HomePage> {
         body: Column(
           children: [
             // all users
-            SizedBox(height: 10.h, child: _allUsers()),
+            SizedBox(
+              height: 14.h,
+              child: Row(
+                children: [SizedBox(width: 5.w), Expanded(child: _allUsers())],
+              ),
+            ),
             Expanded(child: _chatList()),
           ],
         ),
@@ -89,12 +95,42 @@ class _HomePageState extends State<HomePage> {
                       document.data() as Map<String, dynamic>;
 
                   if (userData["Uemail"] != _auth.currentUser!.email) {
-                    return Container(
-                      width: 10.h,
-                      height: 10.h,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2.h,
+                        horizontal: 2.w,
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ChatRoom(
+                                    receverEmail: userData["Uemail"],
+                                    receverId: userData["Uid"],
+                                    receverName: userData["Uemail"],
+                                  ),
+                            ),
+                          );
+                        },
+                        child: SizedBox(
+                          width: 10.h,
+                          height: 10.h,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child:
+                                userData["pfp"].toString().isNotEmpty
+                                    ? Image.network(
+                                      userData["pfp"].toString(),
+                                      fit: BoxFit.cover,
+                                      width: 8.h,
+                                      height: 8.h,
+                                    )
+                                    : Image.asset(
+                                      "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
+                                    ),
+                          ),
+                        ),
                       ),
                     );
                   } else {
@@ -117,7 +153,7 @@ class _HomePageState extends State<HomePage> {
           .collection("chatRoom")
           .doc(chatRoomId)
           .collection("messages")
-          .orderBy("timestamp", descending: true)
+          .orderBy("messageTime", descending: true)
           .limit(1)
           .snapshots()
           .map((snapshot) {
@@ -125,6 +161,35 @@ class _HomePageState extends State<HomePage> {
               return snapshot.docs.first["senderId"] == _auth.currentUser!.uid
                   ? "✓✓  ${snapshot.docs.first["message"]}"
                   : "${snapshot.docs.first["message"]}";
+            }
+            return null;
+          });
+    } catch (e) {
+      print("Error getting latest message stream: $e");
+      return Stream.value(null);
+    }
+  }
+
+  Stream<String?> lastMessageTime(String receiverId) {
+    try {
+      List<String> ids = [_auth.currentUser!.uid, receiverId];
+      ids.sort();
+      String chatRoomId = ids.join("_");
+
+      return _firebaseFirestore
+          .collection("chatRoom")
+          .doc(chatRoomId)
+          .collection("messages")
+          .orderBy("messageTime", descending: true)
+          .limit(1)
+          .snapshots()
+          .map((snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              DateTime datatime = DateTime.fromMicrosecondsSinceEpoch(
+                snapshot.docs.first["messageTime"],
+              );
+
+              return timeago.format(datatime).toString();
             }
             return null;
           });
@@ -174,26 +239,33 @@ class _HomePageState extends State<HomePage> {
                         return StreamBuilder<String?>(
                           stream: _lastMessageStream(userData["Uid"]),
                           builder: (context, lastMessageSnapshot) {
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => ChatRoom(
-                                          receverEmail: userData["Uemail"],
-                                          receverId: userData["Uid"],
-                                          receverName: userData["Uemail"],
-                                        ),
+                            return StreamBuilder<String?>(
+                              stream: lastMessageTime(userData["Uid"]),
+                              builder: (context, lastMessageTime) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => ChatRoom(
+                                              receverEmail: userData["Uemail"],
+                                              receverId: userData["Uid"],
+                                              receverName: userData["Uemail"],
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: FriendChat(
+                                    hasPhoto:
+                                        userData["pfp"].toString().isNotEmpty,
+                                    firendPhoto: userData["pfp"].toString(),
+
+                                    friendName: userData["Uname"],
+                                    lastMessage: lastMessageSnapshot.data ?? "",
+                                    lastMessageTime: lastMessageTime.data!,
                                   ),
                                 );
                               },
-                              child: FriendChat(
-                                hasPhoto: userData["pfp"].toString().isNotEmpty,
-                                firendPhoto: userData["pfp"].toString(),
-
-                                friendName: userData["Uname"],
-                                lastMessage: lastMessageSnapshot.data ?? "",
-                              ),
                             );
                           },
                         );

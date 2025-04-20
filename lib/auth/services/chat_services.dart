@@ -9,13 +9,13 @@ class ChatServices {
   Future<void> sendMessage(String receverId, String message) async {
     final currentUserId = _firebaseAuth.currentUser!.uid;
     final currentUserEmail = _firebaseAuth.currentUser!.email.toString();
-    final timestamp = Timestamp.now();
+    final timestamp = Timestamp.now().microsecondsSinceEpoch;
     Message messageInfo = Message(
       message: message,
       receverId: receverId,
       senderEmail: currentUserEmail,
       senderId: currentUserId,
-      timestamp: timestamp,
+      messageTime: timestamp,
     );
 
     List<String> usersId = [receverId, currentUserId];
@@ -36,7 +36,7 @@ class ChatServices {
         .collection("chatRoom")
         .doc(chatRoomId)
         .collection("messages")
-        .orderBy('timestamp', descending: false)
+        .orderBy('messageTime', descending: false)
         .snapshots();
   }
 }

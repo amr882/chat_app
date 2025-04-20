@@ -7,12 +7,14 @@ class FriendChat extends StatelessWidget {
   final String friendName;
   final String lastMessage;
   final bool hasPhoto;
+  final String lastMessageTime;
   const FriendChat({
     super.key,
     required this.firendPhoto,
     required this.friendName,
     required this.lastMessage,
     required this.hasPhoto,
+    required this.lastMessageTime,
   });
 
   @override
@@ -33,7 +35,7 @@ class FriendChat extends StatelessWidget {
         child: Center(
           child: Container(
             width: 85.w,
-            height: 12.h,
+            height: 10.h,
             decoration: BoxDecoration(
               color: Color(0xff1f1f1f),
               borderRadius: BorderRadius.circular(22),
@@ -92,6 +94,7 @@ class FriendChat extends StatelessWidget {
                         ),
                       ],
                     ),
+                    Text(lastMessageTime,style: TextStyle(color: Colors.white),),
                   ],
                 ),
               ),
