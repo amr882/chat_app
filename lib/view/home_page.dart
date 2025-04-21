@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // all users
             SizedBox(
-              height: 14.h,
+              height: 17.h,
               child: Row(
                 children: [SizedBox(width: 5.w), Expanded(child: _allUsers())],
               ),
@@ -100,37 +100,45 @@ class _HomePageState extends State<HomePage> {
                         vertical: 2.h,
                         horizontal: 2.w,
                       ),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ChatRoom(
-                                    receverEmail: userData["Uemail"],
-                                    receverId: userData["Uid"],
-                                    receverName: userData["Uemail"],
-                                  ),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ChatRoom(
+                                        receverEmail: userData["Uemail"],
+                                        receverId: userData["Uid"],
+                                        receverName: userData["Uemail"],
+                                      ),
+                                ),
+                              );
+                            },
+                            child: SizedBox(
+                              width: 10.h,
+                              height: 10.h,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child:
+                                    userData["pfp"].toString().isNotEmpty
+                                        ? Image.network(
+                                          userData["pfp"].toString(),
+                                          fit: BoxFit.cover,
+                                          width: 8.h,
+                                          height: 8.h,
+                                        )
+                                        : Image.asset(
+                                          "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
+                                        ),
+                              ),
                             ),
-                          );
-                        },
-                        child: SizedBox(
-                          width: 10.h,
-                          height: 10.h,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child:
-                                userData["pfp"].toString().isNotEmpty
-                                    ? Image.network(
-                                      userData["pfp"].toString(),
-                                      fit: BoxFit.cover,
-                                      width: 8.h,
-                                      height: 8.h,
-                                    )
-                                    : Image.asset(
-                                      "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                    ),
                           ),
-                        ),
+                          Text(
+                            userData["Uname"],
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
                     );
                   } else {
@@ -262,7 +270,7 @@ class _HomePageState extends State<HomePage> {
 
                                     friendName: userData["Uname"],
                                     lastMessage: lastMessageSnapshot.data ?? "",
-                                    lastMessageTime: lastMessageTime.data!,
+                                    lastMessageTime: lastMessageTime.data ?? "",
                                   ),
                                 );
                               },
@@ -277,7 +285,7 @@ class _HomePageState extends State<HomePage> {
                 } else {
                   return Container();
                 }
-              }).toList(),
+              }).toList().reversed.toList(),
         );
       },
     );

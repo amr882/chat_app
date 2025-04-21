@@ -35,7 +35,7 @@ class FriendChat extends StatelessWidget {
         child: Center(
           child: Container(
             width: 85.w,
-            height: 10.h,
+            height: 12.h,
             decoration: BoxDecoration(
               color: Color(0xff1f1f1f),
               borderRadius: BorderRadius.circular(22),
@@ -94,7 +94,13 @@ class FriendChat extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Text(lastMessageTime,style: TextStyle(color: Colors.white),),
+                    Text(
+                      lastMessageTime,
+                      style: TextStyle(
+                        color: Color(0xff7c01f6),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
