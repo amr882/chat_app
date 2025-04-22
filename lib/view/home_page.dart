@@ -1,4 +1,5 @@
 import 'package:chat_app/auth/services/auth_services.dart';
+import 'package:chat_app/auth/services/message_services.dart';
 import 'package:chat_app/view/chat_room.dart';
 import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -151,74 +151,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Stream<String?> _lastMessageStream(String receiverId) {
-    try {
-      List<String> ids = [_auth.currentUser!.uid, receiverId];
-      ids.sort();
-      String chatRoomId = ids.join("_");
-
-      return _firebaseFirestore
-          .collection("chatRoom")
-          .doc(chatRoomId)
-          .collection("messages")
-          .orderBy("messageTime", descending: true)
-          .limit(1)
-          .snapshots()
-          .map((snapshot) {
-            if (snapshot.docs.isNotEmpty) {
-              return snapshot.docs.first["senderId"] == _auth.currentUser!.uid
-                  ? "✓✓  ${snapshot.docs.first["message"]}"
-                  : "${snapshot.docs.first["message"]}";
-            }
-            return null;
-          });
-    } catch (e) {
-      print("Error getting latest message stream: $e");
-      return Stream.value(null);
-    }
-  }
-
-  Stream<String?> lastMessageTime(String receiverId) {
-    try {
-      List<String> ids = [_auth.currentUser!.uid, receiverId];
-      ids.sort();
-      String chatRoomId = ids.join("_");
-
-      return _firebaseFirestore
-          .collection("chatRoom")
-          .doc(chatRoomId)
-          .collection("messages")
-          .orderBy("messageTime", descending: true)
-          .limit(1)
-          .snapshots()
-          .map((snapshot) {
-            if (snapshot.docs.isNotEmpty) {
-              DateTime datatime = DateTime.fromMicrosecondsSinceEpoch(
-                snapshot.docs.first["messageTime"],
-              );
-
-              return timeago.format(datatime).toString();
-            }
-            return null;
-          });
-    } catch (e) {
-      print("Error getting latest message stream: $e");
-      return Stream.value(null);
-    }
-  }
-
-  Stream hasMessages(String receiverId) {
-    List<String> ids = [_auth.currentUser!.uid, receiverId];
-    ids.sort();
-    String chatRoomId = ids.join("_");
-    return _firebaseFirestore
-        .collection("chatRoom")
-        .doc(chatRoomId)
-        .collection("messages")
-        .snapshots()
-        .map((snapshot) => snapshot.docs.isNotEmpty);
-  }
-
   Widget _chatList() {
     return StreamBuilder<QuerySnapshot>(
       stream: _usersStream(),
@@ -235,57 +167,74 @@ class _HomePageState extends State<HomePage> {
 
         return ListView(
           children:
-              snapshot.data!.docs.map<Widget>((document) {
-                Map<String, dynamic> userData =
-                    document.data() as Map<String, dynamic>;
+              snapshot.data!.docs
+                  .map<Widget>((document) {
+                    Map<String, dynamic> userData =
+                        document.data() as Map<String, dynamic>;
 
-                if (userData["Uemail"] != _auth.currentUser!.email) {
-                  return StreamBuilder(
-                    stream: hasMessages(userData["Uid"]),
-                    builder: (context, snapshot) {
-                      if (snapshot.data == true) {
-                        return StreamBuilder<String?>(
-                          stream: _lastMessageStream(userData["Uid"]),
-                          builder: (context, lastMessageSnapshot) {
+                    if (userData["Uemail"] != _auth.currentUser!.email) {
+                      //stream to check if there is any messages
+                      return StreamBuilder(
+                        stream: MessageServices().hasMessages(userData["Uid"]),
+                        builder: (context, snapshot) {
+                          if (snapshot.data == true) {
+                            // stream to get latest message
                             return StreamBuilder<String?>(
-                              stream: lastMessageTime(userData["Uid"]),
-                              builder: (context, lastMessageTime) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => ChatRoom(
-                                              receverEmail: userData["Uemail"],
-                                              receverId: userData["Uid"],
-                                              receverName: userData["Uemail"],
-                                            ),
+                              stream: MessageServices().lastMessageStream(
+                                userData["Uid"],
+                              ),
+                              builder: (context, lastMessageSnapshot) {
+                                // stream to get latest message time
+                                return StreamBuilder<String?>(
+                                  stream: MessageServices().lastMessageTime(
+                                    userData["Uid"],
+                                  ),
+                                  builder: (context, lastMessageTime) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => ChatRoom(
+                                                  receverEmail:
+                                                      userData["Uemail"],
+                                                  receverId: userData["Uid"],
+                                                  receverName:
+                                                      userData["Uemail"],
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      child: FriendChat(
+                                        hasPhoto:
+                                            userData["pfp"]
+                                                .toString()
+                                                .isNotEmpty,
+                                        firendPhoto: userData["pfp"].toString(),
+
+                                        friendName: userData["Uname"],
+                                        lastMessage:
+                                            lastMessageSnapshot.data ?? "",
+                                        lastMessageTime:
+                                            lastMessageTime.data ?? "",
                                       ),
                                     );
                                   },
-                                  child: FriendChat(
-                                    hasPhoto:
-                                        userData["pfp"].toString().isNotEmpty,
-                                    firendPhoto: userData["pfp"].toString(),
-
-                                    friendName: userData["Uname"],
-                                    lastMessage: lastMessageSnapshot.data ?? "",
-                                    lastMessageTime: lastMessageTime.data ?? "",
-                                  ),
                                 );
                               },
                             );
-                          },
-                        );
-                      } else {
-                        return Container();
-                      }
-                    },
-                  );
-                } else {
-                  return Container();
-                }
-              }).toList().reversed.toList(),
+                          } else {
+                            return Container();
+                          }
+                        },
+                      );
+                    } else {
+                      return Container();
+                    }
+                  })
+                  .toList()
+                  .reversed
+                  .toList(),
         );
       },
     );
