@@ -5,8 +5,10 @@ import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,11 +57,71 @@ class _HomePageState extends State<HomePage> {
         ),
         body: Column(
           children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.w),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 2.w),
+                decoration: BoxDecoration(
+                  color: Color(0xff1f1f1f),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                width: 100.w,
+                height: 7.h,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Search..",
+                        style: GoogleFonts.rubik(
+                          color: Color(0xff4d4c4e),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SvgPicture.asset("assets/Search.svg"),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             // all users
             SizedBox(
-              height: 17.h,
+              height: 20.h,
               child: Row(
                 children: [SizedBox(width: 5.w), Expanded(child: _allUsers())],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  SizedBox(width: 7.w),
+                  Container(
+                    width: 20.w,
+                    height: 5.h,
+
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        stops: [0.7, 02],
+                        colors: [Color(0xff6a2cf8), Color(0xffa763fe)],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "Recents",
+                        style: GoogleFonts.rubik(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(child: _chatList()),
@@ -110,7 +172,8 @@ class _HomePageState extends State<HomePage> {
                                       (context) => ChatRoom(
                                         receverEmail: userData["Uemail"],
                                         receverId: userData["Uid"],
-                                        receverName: userData["Uemail"],
+                                        receverName: userData["Uname"],
+                                        receverPfp: userData["pfp"],
                                       ),
                                 ),
                               );
@@ -173,59 +236,62 @@ class _HomePageState extends State<HomePage> {
                         document.data() as Map<String, dynamic>;
 
                     if (userData["Uemail"] != _auth.currentUser!.email) {
-                      //stream to check if there is any messages
                       return StreamBuilder(
-                        stream: MessageServices().hasMessages(userData["Uid"]),
-                        builder: (context, snapshot) {
-                          if (snapshot.data == true) {
-                            // stream to get latest message
-                            return StreamBuilder<String?>(
-                              stream: MessageServices().lastMessageStream(
-                                userData["Uid"],
-                              ),
-                              builder: (context, lastMessageSnapshot) {
-                                // stream to get latest message time
-                                return StreamBuilder<String?>(
-                                  stream: MessageServices().lastMessageTime(
-                                    userData["Uid"],
-                                  ),
-                                  builder: (context, lastMessageTime) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => ChatRoom(
-                                                  receverEmail:
-                                                      userData["Uemail"],
-                                                  receverId: userData["Uid"],
-                                                  receverName:
-                                                      userData["Uemail"],
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                      child: FriendChat(
-                                        hasPhoto:
-                                            userData["pfp"]
-                                                .toString()
-                                                .isNotEmpty,
-                                        firendPhoto: userData["pfp"].toString(),
-
-                                        friendName: userData["Uname"],
-                                        lastMessage:
-                                            lastMessageSnapshot.data ?? "",
-                                        lastMessageTime:
-                                            lastMessageTime.data ?? "",
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
+                        stream: MessageServices().message(userData["Uid"]),
+                        builder: (context, messageSnapshot) {
+                          if (messageSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
                             );
-                          } else {
+                          } else if (messageSnapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                "Error getting users list: ${messageSnapshot.error}",
+                              ),
+                            );
+                          } else if (!messageSnapshot.hasData) {
                             return Container();
                           }
+
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ChatRoom(
+                                        receverEmail: userData["Uemail"],
+                                        receverId: userData["Uid"],
+                                        receverName: userData["Uname"],
+                                        receverPfp: userData["pfp"],
+                                      ),
+                                ),
+                              );
+                            },
+                            child: FriendChat(
+                              hasPhoto: userData["pfp"].toString().isNotEmpty,
+                              firendPhoto: userData["pfp"].toString(),
+
+                              friendName: userData["Uname"],
+                              lastMessage:
+                                  // snapshot.docs.first["senderId"] == _auth.currentUser!.uid
+                                  //                   ? "✓✓  ${snapshot.docs.first["message"]}"
+                                  //                   : "${snapshot.docs.first["message"]}";
+                                  messageSnapshot.data[0]["senderId"] ==
+                                          _auth.currentUser!.uid
+                                      ? "✓✓ ${messageSnapshot.data[0]["message"]}"
+                                      : messageSnapshot.data[0]["message"],
+                              lastMessageTime:
+                                  timeago
+                                      .format(
+                                        DateTime.fromMicrosecondsSinceEpoch(
+                                          messageSnapshot
+                                              .data[0]["messageTime"],
+                                        ),
+                                      )
+                                      .toString(),
+                            ),
+                          );
                         },
                       );
                     } else {
