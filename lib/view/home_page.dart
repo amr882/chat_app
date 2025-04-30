@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 5.w),
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 2.w),
+                padding: EdgeInsets.symmetric(horizontal: 5.w),
                 decoration: BoxDecoration(
                   color: Color(0xff1f1f1f),
                   borderRadius: BorderRadius.circular(30),
@@ -241,8 +241,8 @@ class _HomePageState extends State<HomePage> {
                         builder: (context, messageSnapshot) {
                           if (messageSnapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
+                            return Center(
+                              child:Container() ,
                             );
                           } else if (messageSnapshot.hasError) {
                             return Center(
@@ -274,9 +274,6 @@ class _HomePageState extends State<HomePage> {
 
                               friendName: userData["Uname"],
                               lastMessage:
-                                  // snapshot.docs.first["senderId"] == _auth.currentUser!.uid
-                                  //                   ? "✓✓  ${snapshot.docs.first["message"]}"
-                                  //                   : "${snapshot.docs.first["message"]}";
                                   messageSnapshot.data[0]["senderId"] ==
                                           _auth.currentUser!.uid
                                       ? "✓✓ ${messageSnapshot.data[0]["message"]}"

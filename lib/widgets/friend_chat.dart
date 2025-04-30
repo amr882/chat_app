@@ -84,9 +84,9 @@ class FriendChat extends StatelessWidget {
 
                             SizedBox(height: 10),
                             Text(
-                              lastMessage.length <= 20
+                              lastMessage.length <= 15
                                   ? lastMessage
-                                  : "${lastMessage.substring(0, 20)}...",
+                                  : "${lastMessage.substring(0, 15)}...",
 
                               style: GoogleFonts.rubik(
                                 color: Colors.white,

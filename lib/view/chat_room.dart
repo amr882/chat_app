@@ -1,8 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:chat_app/auth/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
+import 'package:chat_app/components/message_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
 
@@ -47,70 +51,103 @@ class _ChatRoomState extends State<ChatRoom> {
         ),
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: Colors.transparent,
         body: Column(
           children: [
-            Container(
-              width: 100.w,
-              height: 15.h,
-              color: Color(0xff1f1f1f),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: 10.h,
-                      height: 10.h,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(17),
-                        child:
-                            widget.receverPfp.isNotEmpty
-                                ? Image.network(
-                                  widget.receverPfp,
-                                  fit: BoxFit.cover,
-                                  width: 8.h,
-                                  height: 8.h,
-                                )
-                                : Image.asset(
-                                  "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                ),
+            SafeArea(
+              child: Container(
+                width: 100.w,
+                height: 10.h,
+                color: Color(0xff1f1f1f),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 2.w),
-                  Text(
-                    widget.receverName.replaceFirst(
-                      widget.receverName[0],
-                      widget.receverName[0].toUpperCase(),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 7.h,
+                        height: 7.h,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(17),
+                          child:
+                              widget.receverPfp.isNotEmpty
+                                  ? Image.network(
+                                    widget.receverPfp,
+                                    fit: BoxFit.cover,
+                                  )
+                                  : Image.asset(
+                                    "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
+                                    fit: BoxFit.cover,
+                                  ),
+                        ),
+                      ),
                     ),
-                    style: GoogleFonts.rubik(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(width: 2.w),
+                    Text(
+                      widget.receverName.replaceFirst(
+                        widget.receverName[0],
+                        widget.receverName[0].toUpperCase(),
+                      ),
+                      style: GoogleFonts.rubik(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
-            SizedBox(height: 80.h, child: buildMessageList()),
+            Expanded(child: buildMessageList()),
 
-            Align(
-              alignment: Alignment.bottomCenter,
+            SafeArea(
               child: Container(
-                color: Colors.red,
+                color: Color(0xff1f1f1f),
                 width: 100.w,
-                height: 5.h,
-                child: TextField(
-                  controller: messageController,
-                  onSubmitted: (value) {
-                    sendMessage();
-                  },
+                height: 10.h,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        // send file
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: SvgPicture.asset(
+                              "assets/attachment-2-svgrepo-com.svg",
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: MessageField(controller: messageController),
+                      ),
+                      GestureDetector(
+                        // send message
+                        onTap: () => sendMessage(),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: SvgPicture.asset("assets/Send.svg"),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -134,6 +171,7 @@ class _ChatRoomState extends State<ChatRoom> {
           return Center(child: Text("error getting messages"));
         }
         return ListView(
+          physics: BouncingScrollPhysics(),
           children:
               snapshot.data!.docs.map((doc) => _buildMessage(doc)).toList(),
         );
@@ -150,7 +188,7 @@ class _ChatRoomState extends State<ChatRoom> {
     return Container(
       alignment: alignment,
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.symmetric(vertical: 0.5.h),
         child: Column(
           crossAxisAlignment:
               data["senderId"] == _firebaseAuth.currentUser!.uid
@@ -161,7 +199,6 @@ class _ChatRoomState extends State<ChatRoom> {
               message: data["message"],
               uSender: data["senderId"] == _firebaseAuth.currentUser!.uid,
             ),
-            //Text(data["senderEmail"]), Text(data["message"])
           ],
         ),
       ),

@@ -13,19 +13,32 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: EdgeInsets.all(8),
 
-      margin: EdgeInsets.only(left: 15.w, right: 5.w),
+      margin: EdgeInsets.only(
+        left: uSender ? 15.w : 5.w,
+        right: uSender ? 5.w : 15.w,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(10),
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           stops: [0.7, 02],
-          colors: [Color(0xff8818f8), Color(0xffa650fc)],
+          colors:
+              uSender
+                  ? [Color(0xff8818f8), Color(0xffa650fc)]
+                  : [Color(0xff1f1f1f), Color(0xff1f1f1f)],
         ),
       ),
-      child: Text(message, style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600,)),
+      child: Text(
+        message,
+        style: TextStyle(
+          color: uSender ? Colors.white : Color(0xffbababa),
+          fontWeight: FontWeight.w500,
+          fontSize: 2.h
+        ),
+      ),
     );
   }
 }
