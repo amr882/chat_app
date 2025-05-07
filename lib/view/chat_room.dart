@@ -38,6 +38,45 @@ class _ChatRoomState extends State<ChatRoom> {
     messageController.clear();
   }
 
+  final ScrollController scrollController = ScrollController();
+  FocusNode focusNode = FocusNode();
+
+  @override
+  void initState() {
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        Future.delayed(Duration(seconds: 3), () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            scrollDown();
+          });
+        });
+      }
+    });
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollDown();
+    });
+  }
+
+  scrollDown() {
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 200),
+        curve: Curves.fastOutSlowIn,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    messageController.dispose();
+    focusNode.dispose();
+    scrollController.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -59,7 +98,14 @@ class _ChatRoomState extends State<ChatRoom> {
               child: Container(
                 width: 100.w,
                 height: 10.h,
-                color: Color(0xff1f1f1f),
+                decoration: BoxDecoration(
+                  color: Color(0xff1f1f1f),
+                  borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(14),
+                    bottomLeft: Radius.circular(14),
+                  ),
+                ),
+
                 child: Row(
                   children: [
                     GestureDetector(
@@ -109,45 +155,53 @@ class _ChatRoomState extends State<ChatRoom> {
 
             Expanded(child: buildMessageList()),
 
-            SafeArea(
-              child: Container(
+            Container(
+              decoration: BoxDecoration(
                 color: Color(0xff1f1f1f),
-                width: 100.w,
-                height: 10.h,
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        // send file
-                        child: SizedBox(
-                          width: 50,
-                          height: 50,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: SvgPicture.asset(
-                              "assets/attachment-2-svgrepo-com.svg",
-                            ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(14),
+                  topRight: Radius.circular(14),
+                ),
+              ),
+
+              width: 100.w,
+              height: 10.h,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      // send file
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: SvgPicture.asset(
+                            "assets/attachment-2-svgrepo-com.svg",
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: MessageField(controller: messageController),
+                    ),
+                    Expanded(
+                      child: MessageField(
+                        controller: messageController,
+                        focusNode: focusNode,
                       ),
-                      GestureDetector(
-                        // send message
-                        onTap: () => sendMessage(),
-                        child: SizedBox(
-                          width: 50,
-                          height: 50,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: SvgPicture.asset("assets/Send.svg"),
-                          ),
+                    ),
+                    GestureDetector(
+                      // send message
+                      onTap: () => sendMessage(),
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: SvgPicture.asset("assets/Send.svg"),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -170,7 +224,11 @@ class _ChatRoomState extends State<ChatRoom> {
         if (snapshot.hasError) {
           return Center(child: Text("error getting messages"));
         }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          scrollDown();
+        });
         return ListView(
+          controller: scrollController,
           physics: BouncingScrollPhysics(),
           children:
               snapshot.data!.docs.map((doc) => _buildMessage(doc)).toList(),

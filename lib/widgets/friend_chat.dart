@@ -103,6 +103,7 @@ class FriendChat extends StatelessWidget {
                       style: TextStyle(
                         color: Color(0xff7c01f6),
                         fontWeight: FontWeight.w700,
+                        fontSize: 3.w,
                       ),
                     ),
                   ],
