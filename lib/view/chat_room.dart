@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
+import 'package:flutter_regex/flutter_regex.dart';
 
 class ChatRoom extends StatefulWidget {
   final String receverEmail;
@@ -31,6 +32,18 @@ class _ChatRoomState extends State<ChatRoom> {
   TextEditingController messageController = TextEditingController();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   ChatServices chatServices = ChatServices();
+
+  // pick image
+
+  // sendPhoto() async {
+  //   ChatServices().sendPhoto(widget.receverId);
+  // }
+
+  sendPhoto() async {
+    var photo = await ChatServices().pickImage();
+    await ChatServices().sendMessage(widget.receverId, photo.toString());
+  }
+
   sendMessage() async {
     if (messageController.text.isNotEmpty) {
       ChatServices().sendMessage(widget.receverId, messageController.text);
@@ -172,13 +185,18 @@ class _ChatRoomState extends State<ChatRoom> {
                   children: [
                     GestureDetector(
                       // send file
-                      child: SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: SvgPicture.asset(
-                            "assets/attachment-2-svgrepo-com.svg",
+                      child: GestureDetector(
+                        onTap: () {
+                          sendPhoto();
+                        },
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: SvgPicture.asset(
+                              "assets/attachment-2-svgrepo-com.svg",
+                            ),
                           ),
                         ),
                       ),
@@ -253,10 +271,18 @@ class _ChatRoomState extends State<ChatRoom> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
           children: [
-            MessageBubble(
-              message: data["message"],
-              uSender: data["senderId"] == _firebaseAuth.currentUser!.uid,
-            ),
+            data["message"].toString().isUrl()
+                ? SizedBox(
+                  width: 80.w,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(data["message"], fit: BoxFit.cover),
+                  ),
+                )
+                : MessageBubble(
+                  message: data["message"],
+                  uSender: data["senderId"] == _firebaseAuth.currentUser!.uid,
+                ),
           ],
         ),
       ),

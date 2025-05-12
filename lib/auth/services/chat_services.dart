@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:chat_app/model/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChatServices {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -26,6 +30,35 @@ class ChatServices {
         .doc(chatRoomId)
         .collection("messages")
         .add(messageInfo.toJson());
+  }
+
+  File? imageFile;
+
+  pickImage() async {
+    ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      imageFile = File(image.path);
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      await uploadImage(fileName);
+      return Supabase.instance.client.storage
+          .from('chatpfp')
+          .getPublicUrl('uploads/$fileName');
+    }
+  }
+
+  Future<void> uploadImage(String fileName) async {
+    if (imageFile == null) return;
+
+    final path = "uploads/$fileName";
+    try {
+      await Supabase.instance.client.storage
+          .from("chatpfp")
+          .upload(path, imageFile!);
+    } catch (e) {
+      print("Error uploading image: $e");
+    }
   }
 
   Stream<QuerySnapshot> getMessage(String userId, String friendId) {

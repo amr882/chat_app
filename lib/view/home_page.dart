@@ -241,9 +241,7 @@ class _HomePageState extends State<HomePage> {
                         builder: (context, messageSnapshot) {
                           if (messageSnapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return Center(
-                              child:Container() ,
-                            );
+                            return Center(child: Container());
                           } else if (messageSnapshot.hasError) {
                             return Center(
                               child: Text(
