@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/auth/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
@@ -271,18 +272,10 @@ class _ChatRoomState extends State<ChatRoom> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
           children: [
-            data["message"].toString().isUrl()
-                ? SizedBox(
-                  width: 80.w,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.network(data["message"], fit: BoxFit.cover),
-                  ),
-                )
-                : MessageBubble(
-                  message: data["message"],
-                  uSender: data["senderId"] == _firebaseAuth.currentUser!.uid,
-                ),
+            MessageBubble(
+              message: data["message"],
+              uSender: data["senderId"] == _firebaseAuth.currentUser!.uid,
+            ),
           ],
         ),
       ),
