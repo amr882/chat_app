@@ -20,7 +20,7 @@ class FriendChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 0.5.h),
+      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
@@ -34,7 +34,7 @@ class FriendChat extends StatelessWidget {
         padding: EdgeInsets.all(1),
         child: Center(
           child: Container(
-            width: 85.w,
+            width: 94.w,
             height: 12.h,
             decoration: BoxDecoration(
               color: Color(0xff1f1f1f),

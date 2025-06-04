@@ -1,16 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/auth/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
+import 'package:chat_app/components/message_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter_regex/flutter_regex.dart';
 
 class ChatRoom extends StatefulWidget {
   final String receverEmail;
@@ -169,6 +168,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
             Expanded(child: buildMessageList()),
 
+            // text field to send messages
             Container(
               decoration: BoxDecoration(
                 color: Color(0xff1f1f1f),
@@ -246,9 +246,11 @@ class _ChatRoomState extends State<ChatRoom> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           scrollDown();
         });
-        return ListView(
-          controller: scrollController,
-          physics: BouncingScrollPhysics(),
+        return MessageList(
+          scrollController: scrollController,
+          scrollDown: () {
+            scrollDown();
+          },
           children:
               snapshot.data!.docs.map((doc) => _buildMessage(doc)).toList(),
         );

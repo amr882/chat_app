@@ -21,7 +21,7 @@ class MessageBubble extends StatelessWidget {
       child:
           message.toString().isUrl()
               ? Container(
-                width: 80.w,
+                height: 30.h,
                 margin: EdgeInsets.only(
                   left: uSender ? 15.w : 5.w,
                   right: uSender ? 5.w : 15.w,
@@ -32,7 +32,7 @@ class MessageBubble extends StatelessWidget {
                     imageUrl: message,
                     placeholder:
                         (context, url) => SizedBox(
-                          height: 10.h,
+                          height: 30.h,
                           child: Center(child: CircularProgressIndicator()),
                         ),
                     errorWidget:
