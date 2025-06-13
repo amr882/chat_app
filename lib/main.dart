@@ -1,7 +1,8 @@
 import 'package:chat_app/auth/keys.dart';
 import 'package:chat_app/auth/sign_in.dart';
+import 'package:chat_app/components/custom_navigation_bar.dart';
 import 'package:chat_app/firebase_options.dart';
-import 'package:chat_app/view/home_page.dart';
+import 'package:chat_app/view/nav_bar_pages.dart/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,6 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  
   const MyApp({super.key});
 
   @override
@@ -47,8 +47,11 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home:
-              FirebaseAuth.instance.currentUser == null ? SignIn() : HomePage(),
+              FirebaseAuth.instance.currentUser == null
+                  ? SignIn()
+                  : CustomNavigationBar(),
 
+          // FirebaseAuth.instance.currentUser == null ? SignIn() : HomePage(),
           routes: {
             'homePage': (context) => HomePage(),
             "signIn": (context) => SignIn(),

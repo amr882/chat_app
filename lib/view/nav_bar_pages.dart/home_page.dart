@@ -1,5 +1,5 @@
 import 'package:chat_app/auth/services/auth_services.dart';
-import 'package:chat_app/auth/services/message_services.dart';
+import 'package:chat_app/services/message_services.dart';
 import 'package:chat_app/view/chat_room.dart';
 import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -84,15 +84,18 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
+      
             // all users
             SizedBox(
               height: 20.h,
               child: Row(
-                children: [SizedBox(width: 5.w), Expanded(child: _allUsers())],
+                children: [
+                  SizedBox(width: 5.w),
+                  Expanded(child: _allUsers()),
+                ],
               ),
             ),
-
+      
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -101,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                   Container(
                     width: 20.w,
                     height: 5.h,
-
+      
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       gradient: LinearGradient(

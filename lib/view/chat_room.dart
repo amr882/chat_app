@@ -1,9 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:chat_app/auth/services/chat_services.dart';
+import 'package:chat_app/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
 import 'package:chat_app/components/message_list.dart';
+import 'package:chat_app/view/call_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -110,7 +111,7 @@ class _ChatRoomState extends State<ChatRoom> {
             SafeArea(
               child: Container(
                 width: 100.w,
-                height: 10.h,
+                height: 9.h,
                 decoration: BoxDecoration(
                   color: Color(0xff1f1f1f),
                   borderRadius: BorderRadius.only(
@@ -119,49 +120,75 @@ class _ChatRoomState extends State<ChatRoom> {
                   ),
                 ),
 
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Icon(
-                        Icons.arrow_back_rounded,
-                        color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 5.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 2.w),
+                            child: SizedBox(
+                              width: 7.h,
+                              height: 7.h,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child:
+                                    widget.receverPfp.isNotEmpty
+                                        ? Image.network(
+                                          widget.receverPfp,
+                                          fit: BoxFit.cover,
+                                        )
+                                        : Image.asset(
+                                          "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
+                                          fit: BoxFit.cover,
+                                        ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 2.w),
+                          Text(
+                            widget.receverName.replaceFirst(
+                              widget.receverName[0],
+                              widget.receverName[0].toUpperCase(),
+                            ),
+                            style: GoogleFonts.rubik(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 7.h,
-                        height: 7.h,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(17),
-                          child:
-                              widget.receverPfp.isNotEmpty
-                                  ? Image.network(
-                                    widget.receverPfp,
-                                    fit: BoxFit.cover,
-                                  )
-                                  : Image.asset(
-                                    "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                    fit: BoxFit.cover,
-                                  ),
-                        ),
+
+                      // call user
+                      GestureDetector(
+                        onTap: () {
+                          List<String> usersId = [
+                            widget.receverId,
+                            _firebaseAuth.currentUser!.uid,
+                          ];
+                          usersId.sort();
+                          String chatRoomId = usersId.join("_");
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => AudioCallPage(),
+                            ),
+                          );
+                        },
+                        child: Icon(Icons.call, color: Colors.white),
                       ),
-                    ),
-                    SizedBox(width: 2.w),
-                    Text(
-                      widget.receverName.replaceFirst(
-                        widget.receverName[0],
-                        widget.receverName[0].toUpperCase(),
-                      ),
-                      style: GoogleFonts.rubik(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
