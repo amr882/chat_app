@@ -1,4 +1,4 @@
-import 'package:chat_app/view/nav_bar_pages.dart/home_page.dart';
+import 'package:chat_app/view/nav_bar_pages.dart/chat_page.dart';
 import 'package:chat_app/view/nav_bar_pages.dart/call_hestory.dart';
 import 'package:chat_app/view/nav_bar_pages.dart/setting_page.dart';
 import 'package:chat_app/view/nav_bar_pages.dart/stories_page.dart';
@@ -15,7 +15,7 @@ class CustomNavigationBar extends StatefulWidget {
 
 class _CustomNavigationBarState extends State<CustomNavigationBar> {
   int currentPageIndex = 0;
-  List pages = [HomePage(), CallHestory(), StoriesPage(), SettingPage()];
+  List pages = [ChatPage(), CallHestory(), StoriesPage(), SettingPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +29,19 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 height: 8.h,
-
-                margin: EdgeInsets.symmetric(horizontal: 9.w, vertical: 1.h),
+                margin: EdgeInsets.symmetric(horizontal: 9.w, vertical: 2.h),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xff252525),
                   borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 1,
+                      spreadRadius: 2,
+                      offset: Offset(0, 5),
+                      color: const Color(0xff252525),
+                    ),
+                  ],
                 ),
                 child: Theme(
                   data: Theme.of(context).copyWith(

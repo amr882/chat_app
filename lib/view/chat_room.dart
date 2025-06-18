@@ -4,6 +4,7 @@ import 'package:chat_app/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
 import 'package:chat_app/components/message_list.dart';
+import 'package:chat_app/services/message_services.dart';
 import 'package:chat_app/view/call_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,22 +33,23 @@ class ChatRoom extends StatefulWidget {
 class _ChatRoomState extends State<ChatRoom> {
   TextEditingController messageController = TextEditingController();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  ChatServices chatServices = ChatServices();
+  MessageServices messageServices = MessageServices();
 
   // pick image
 
   // sendPhoto() async {
-  //   ChatServices().sendPhoto(widget.receverId);
+  //   MessageServices().sendPhoto(widget.receverId);
   // }
 
   sendPhoto() async {
-    var photo = await ChatServices().pickImage();
-    await ChatServices().sendMessage(widget.receverId, photo.toString());
+    var photo = await MessageServices().pickImage();
+    if (photo == null) return;
+    await MessageServices().sendMessage(widget.receverId, photo.toString());
   }
 
   sendMessage() async {
     if (messageController.text.isNotEmpty) {
-      ChatServices().sendMessage(widget.receverId, messageController.text);
+      MessageServices().sendMessage(widget.receverId, messageController.text);
     }
     messageController.clear();
   }
@@ -178,7 +180,7 @@ class _ChatRoomState extends State<ChatRoom> {
                             _firebaseAuth.currentUser!.uid,
                           ];
                           usersId.sort();
-                          String chatRoomId = usersId.join("_");
+                          // String chatRoomId = usersId.join("_");
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => AudioCallPage(),
@@ -259,7 +261,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
   Widget buildMessageList() {
     return StreamBuilder(
-      stream: chatServices.getMessage(
+      stream: messageServices.getMessage(
         _firebaseAuth.currentUser!.uid,
         widget.receverId,
       ),

@@ -1,5 +1,5 @@
 import 'package:chat_app/auth/services/auth_services.dart';
-import 'package:chat_app/services/message_services.dart';
+import 'package:chat_app/services/chat_services.dart';
 import 'package:chat_app/view/chat_room.dart';
 import 'package:chat_app/widgets/friend_chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,14 +10,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sizer/sizer.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class ChatPage extends StatefulWidget {
+  const ChatPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _ChatPageState extends State<ChatPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
   Future signOut() async {
@@ -84,18 +84,15 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-      
+
             // all users
             SizedBox(
               height: 20.h,
               child: Row(
-                children: [
-                  SizedBox(width: 5.w),
-                  Expanded(child: _allUsers()),
-                ],
+                children: [SizedBox(width: 5.w), Expanded(child: _allUsers())],
               ),
             ),
-      
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -104,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                   Container(
                     width: 20.w,
                     height: 5.h,
-      
+
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       gradient: LinearGradient(
@@ -231,74 +228,78 @@ class _HomePageState extends State<HomePage> {
           return const Center(child: Text("No users found."));
         }
 
-        return ListView(
-          children:
-              snapshot.data!.docs
-                  .map<Widget>((document) {
-                    Map<String, dynamic> userData =
-                        document.data() as Map<String, dynamic>;
+        return Padding(
+          padding: EdgeInsets.only(bottom: 11.h),
+          child: ListView(
+            physics: BouncingScrollPhysics(),
+            children:
+                snapshot.data!.docs
+                    .map<Widget>((document) {
+                      Map<String, dynamic> userData =
+                          document.data() as Map<String, dynamic>;
 
-                    if (userData["Uemail"] != _auth.currentUser!.email) {
-                      return StreamBuilder(
-                        stream: MessageServices().message(userData["Uid"]),
-                        builder: (context, messageSnapshot) {
-                          if (messageSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: Container());
-                          } else if (messageSnapshot.hasError) {
-                            return Center(
-                              child: Text(
-                                "Error getting users list: ${messageSnapshot.error}",
-                              ),
-                            );
-                          } else if (!messageSnapshot.hasData) {
-                            return Container();
-                          }
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => ChatRoom(
-                                        receverEmail: userData["Uemail"],
-                                        receverId: userData["Uid"],
-                                        receverName: userData["Uname"],
-                                        receverPfp: userData["pfp"],
-                                      ),
+                      if (userData["Uemail"] != _auth.currentUser!.email) {
+                        return StreamBuilder(
+                          stream: ChatServices().message(userData["Uid"]),
+                          builder: (context, messageSnapshot) {
+                            if (messageSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(child: Container());
+                            } else if (messageSnapshot.hasError) {
+                              return Center(
+                                child: Text(
+                                  "Error getting users list: ${messageSnapshot.error}",
                                 ),
                               );
-                            },
-                            child: FriendChat(
-                              hasPhoto: userData["pfp"].toString().isNotEmpty,
-                              firendPhoto: userData["pfp"].toString(),
+                            } else if (!messageSnapshot.hasData) {
+                              return Container();
+                            }
 
-                              friendName: userData["Uname"],
-                              lastMessage:
-                                  messageSnapshot.data[0]["senderId"] ==
-                                          _auth.currentUser!.uid
-                                      ? "✓✓ ${messageSnapshot.data[0]["message"]}"
-                                      : messageSnapshot.data[0]["message"],
-                              lastMessageTime:
-                                  timeago
-                                      .format(
-                                        DateTime.fromMicrosecondsSinceEpoch(
-                                          messageSnapshot
-                                              .data[0]["messageTime"],
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => ChatRoom(
+                                          receverEmail: userData["Uemail"],
+                                          receverId: userData["Uid"],
+                                          receverName: userData["Uname"],
+                                          receverPfp: userData["pfp"],
                                         ),
-                                      )
-                                      .toString(),
-                            ),
-                          );
-                        },
-                      );
-                    } else {
-                      return Container();
-                    }
-                  })
-                  .toList()
-                  .reversed
-                  .toList(),
+                                  ),
+                                );
+                              },
+                              child: FriendChat(
+                                hasPhoto: userData["pfp"].toString().isNotEmpty,
+                                firendPhoto: userData["pfp"].toString(),
+
+                                friendName: userData["Uname"],
+                                lastMessage:
+                                    messageSnapshot.data[0]["senderId"] ==
+                                            _auth.currentUser!.uid
+                                        ? "✓✓ ${messageSnapshot.data[0]["message"]}"
+                                        : messageSnapshot.data[0]["message"],
+                                lastMessageTime:
+                                    timeago
+                                        .format(
+                                          DateTime.fromMicrosecondsSinceEpoch(
+                                            messageSnapshot
+                                                .data[0]["messageTime"],
+                                          ),
+                                        )
+                                        .toString(),
+                              ),
+                            );
+                          },
+                        );
+                      } else {
+                        return Container();
+                      }
+                    })
+                    .toList()
+                    .reversed
+                    .toList(),
+          ),
         );
       },
     );

@@ -49,6 +49,7 @@ dependencies:
   flutter_regex: ^0.0.3
   cached_network_image: ^3.4.1
   zego_uikit_prebuilt_call: ^4.17.1
+  file_picker: ^10.2.0
 
 dev_dependencies:
   flutter_test:
