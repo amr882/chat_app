@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:chat_app/services/chat_services.dart';
 import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
 import 'package:chat_app/components/message_list.dart';

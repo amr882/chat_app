@@ -1,11 +1,15 @@
 import 'dart:io';
+import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StoriesServices {
-  // upload storie from storage
-
+  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  DateTime dateTime = DateTime.now();
   // pick stories from local storage
   File? storyFile;
   pickStory() async {
@@ -23,7 +27,7 @@ class StoriesServices {
   uploadToStorage() async {
     if (storyFile == null) return;
 
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final fileName = dateTime.millisecondsSinceEpoch.toString();
     final path = "stories/$fileName";
     await Supabase.instance.client.storage
         .from("chatpfp")
@@ -32,11 +36,57 @@ class StoriesServices {
     final String publicUrl = Supabase.instance.client.storage
         .from('chatpfp')
         .getPublicUrl(path);
+    uploadToFirestore(publicUrl);
+    print("story uploaded to firebase");
 
     print("Story uploaded successfully! Public URL: $publicUrl");
     return publicUrl;
   }
-}
 
+  // add story to firebase firestore
+
+  uploadToFirestore(String storyData) async {
+    // gerating a random id for story
+    var r = Random();
+    String storyId = String.fromCharCodes(
+      List.generate(20, (index) => r.nextInt(33) + 89),
+    );
+    // updating story data on firebase firestore
+    await firebaseFirestore
+        .collection("users")
+        .doc(firebaseAuth.currentUser!.uid)
+        .collection("stories")
+        .doc(storyId)
+        .set({
+          "uploading_date": dateTime,
+          "story_data": storyData,
+          "story_id": storyId,
+        });
+  }
+
+  // get list of stories from all user withthen 1 day of uploading
+  Future<List<Map<String, dynamic>>> getStrories() async {
+    QuerySnapshot usersSnapshot =
+        await firebaseFirestore.collection("users").get();
+    List<Map<String, dynamic>> usersStories = [];
+    for (QueryDocumentSnapshot userDoc in usersSnapshot.docs) {
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      // Get the user's document ID
+      String userId = userDoc.id;
+
+      QuerySnapshot storiesSnapshot =
+          await firebaseFirestore
+              .collection("users")
+              .doc(userId)
+              .collection("stories")
+              .get();
+
+      for (QueryDocumentSnapshot storyData in storiesSnapshot.docs) {
+        usersStories.add(storyData.data() as Map<String, dynamic>);
+      }
+    }
+    return usersStories;
+  }
+}
 
   // DateTime dateTime = DateTime.now();
