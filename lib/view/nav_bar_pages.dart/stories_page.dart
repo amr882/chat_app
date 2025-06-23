@@ -12,6 +12,20 @@ class StoriesPage extends StatefulWidget {
 
 class _StoriesPageState extends State<StoriesPage> {
   bool isLoading = false;
+  String state = "no action";
+  stories() async {
+    setState(() {
+      isLoading = true;
+    });
+    await StoriesServices().pickStory();
+    setState(() {
+      isLoading = false;
+      state = "uploaded";
+    });
+    print(
+      "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++uploaded ",
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +65,9 @@ class _StoriesPageState extends State<StoriesPage> {
                       )
                       : Icon(Icons.add, color: Colors.white, size: 4.h),
             ),
-            onPressed: () {},
+            onPressed: () {
+              stories();
+            },
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -67,7 +83,10 @@ class _StoriesPageState extends State<StoriesPage> {
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
-                return Text(snapshot.data![index]["story_id"],style: TextStyle(color: Colors.white),);
+                return Text(
+                  snapshot.data![index]["story_id"],
+                  style: TextStyle(color: Colors.white),
+                );
               },
             );
           },

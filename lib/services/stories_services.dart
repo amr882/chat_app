@@ -68,9 +68,9 @@ class StoriesServices {
   Future<List<Map<String, dynamic>>> getStrories() async {
     QuerySnapshot usersSnapshot =
         await firebaseFirestore.collection("users").get();
+    DateTime twentyHoursAgo = DateTime.now().subtract(Duration(days: 1));
     List<Map<String, dynamic>> usersStories = [];
     for (QueryDocumentSnapshot userDoc in usersSnapshot.docs) {
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
       // Get the user's document ID
       String userId = userDoc.id;
 
@@ -79,6 +79,7 @@ class StoriesServices {
               .collection("users")
               .doc(userId)
               .collection("stories")
+              .where("uploading_date", isGreaterThan: twentyHoursAgo)
               .get();
 
       for (QueryDocumentSnapshot storyData in storiesSnapshot.docs) {
@@ -88,5 +89,3 @@ class StoriesServices {
     return usersStories;
   }
 }
-
-  // DateTime dateTime = DateTime.now();
