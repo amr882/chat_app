@@ -12,7 +12,7 @@ class StoriesPage extends StatefulWidget {
 
 class _StoriesPageState extends State<StoriesPage> {
   bool isLoading = false;
-  String state = "no action";
+
   stories() async {
     setState(() {
       isLoading = true;
@@ -20,7 +20,6 @@ class _StoriesPageState extends State<StoriesPage> {
     await StoriesServices().pickStory();
     setState(() {
       isLoading = false;
-      state = "uploaded";
     });
     print(
       "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++uploaded ",
@@ -66,7 +65,7 @@ class _StoriesPageState extends State<StoriesPage> {
                       : Icon(Icons.add, color: Colors.white, size: 4.h),
             ),
             onPressed: () {
-              stories();
+              StoriesServices().getStrories();
             },
           ),
         ),
@@ -80,6 +79,7 @@ class _StoriesPageState extends State<StoriesPage> {
             if (snapshot.hasError) {
               return Center(child: Text("error getting stories"));
             }
+            print(snapshot.data);
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
