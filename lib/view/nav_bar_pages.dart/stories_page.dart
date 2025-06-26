@@ -65,7 +65,7 @@ class _StoriesPageState extends State<StoriesPage> {
                       : Icon(Icons.add, color: Colors.white, size: 4.h),
             ),
             onPressed: () {
-              StoriesServices().getStrories();
+              stories();
             },
           ),
         ),
