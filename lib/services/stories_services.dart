@@ -1,9 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'dart:math';
 
+import 'package:chat_app/view/story_trimmer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StoriesServices {
@@ -12,15 +16,51 @@ class StoriesServices {
   DateTime dateTime = DateTime.now();
   // pick stories from local storage
   File? storyFile;
-  pickStory() async {
+  pickStory(BuildContext context) async {
+    bool? isVideo;
     FilePicker filePicker = FilePicker.platform;
     FilePickerResult? result = await filePicker.pickFiles(
       type: FileType.any,
+
       allowMultiple: false,
     );
     if (result == null) return;
+
+    PlatformFile file = result.files.first;
     storyFile = File(result.files.single.path!);
-    await uploadToStorage();
+
+    if (file.extension != null) {
+      final String lowerCaseExtension = file.extension!.toLowerCase();
+      if ([
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'bmp',
+        'webp',
+      ].contains(lowerCaseExtension)) {
+        isVideo = false;
+        print('Picked file is an IMAGE.');
+      } else if ([
+        'mp4',
+        'mov',
+        'avi',
+        'mkv',
+        'webm',
+      ].contains(lowerCaseExtension)) {
+        print('Picked file is a VIDEO.');
+        isVideo = true;
+      } else {
+        print(
+          'Picked file is neither a common image nor video type by extension.',
+        );
+      }
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => StoryTrimmer(isVideo: isVideo!, file: storyFile!),
+      ),
+    );
   }
 
   // upload story to Supabase

@@ -17,7 +17,7 @@ class _StoriesPageState extends State<StoriesPage> {
     setState(() {
       isLoading = true;
     });
-    await StoriesServices().pickStory();
+    await StoriesServices().pickStory(context);
     setState(() {
       isLoading = false;
     });
