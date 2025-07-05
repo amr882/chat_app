@@ -1,6 +1,7 @@
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 class StoriesPage extends StatefulWidget {
@@ -11,15 +12,12 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
-  bool isLoading = false;
+  Key _futureBuilderKey = UniqueKey();
 
   stories() async {
-    setState(() {
-      isLoading = true;
-    });
     await StoriesServices().pickStory(context);
     setState(() {
-      isLoading = false;
+      _futureBuilderKey = UniqueKey();
     });
     print(
       "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++uploaded ",
@@ -28,6 +26,7 @@ class _StoriesPageState extends State<StoriesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final storiesService = Provider.of<StoriesServices>(context);
     return Container(
       alignment: Alignment.topCenter,
       decoration: const BoxDecoration(
@@ -57,7 +56,7 @@ class _StoriesPageState extends State<StoriesPage> {
             backgroundColor: Color(0xff7c01f6),
             child: Center(
               child:
-                  isLoading
+                  storiesService.isLoading
                       ? Padding(
                         padding: EdgeInsets.all(2.h),
                         child: CircularProgressIndicator(color: Colors.white),
@@ -65,32 +64,44 @@ class _StoriesPageState extends State<StoriesPage> {
                       : Icon(Icons.add, color: Colors.white, size: 4.h),
             ),
             onPressed: () {
-              stories();
+              if (!storiesService.isLoading) {
+                stories();
+              }
             },
           ),
         ),
         backgroundColor: Colors.transparent,
-        body: FutureBuilder(
-          future: StoriesServices().getStrories(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text("error getting stories"));
-            }
-            print(snapshot.data);
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                return Text(
-                  snapshot.data![index]["story_id"],
-                  style: TextStyle(color: Colors.white),
-                );
-              },
-            );
-          },
-        ),
+        body:
+            storiesService.isLoading
+                ? Center(child: CircularProgressIndicator())
+                : FutureBuilder(
+                  key: _futureBuilderKey,
+                  future: StoriesServices().getStrories(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "No stories",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }
+                    print(snapshot.data);
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return Text(
+                          snapshot.data![index]["story_id"],
+                          style: TextStyle(color: Colors.white),
+                        );
+                      },
+                    );
+                  },
+                ),
       ),
     );
   }

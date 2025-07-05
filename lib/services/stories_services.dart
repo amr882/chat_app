@@ -9,14 +9,27 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-class StoriesServices {
+class StoriesServices extends ChangeNotifier {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   DateTime dateTime = DateTime.now();
+
+  bool _isLoading = false;
+  final List<Map<String, dynamic>> _storiseList = [];
+  bool get isLoading => _isLoading;
+  List<Map<String, dynamic>> get storiesList => _storiseList;
+
+  void setLoadingState(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
   // pick stories from local storage
   File? storyFile;
-  pickStory(BuildContext context) async {
+  Future<void> pickStory(BuildContext context) async {
+    setLoadingState(true);
     bool? isVideo;
     FilePicker filePicker = FilePicker.platform;
     FilePickerResult? result = await filePicker.pickFiles(
@@ -24,7 +37,10 @@ class StoriesServices {
 
       allowMultiple: false,
     );
-    if (result == null) return;
+    if (result == null) {
+      setLoadingState(false);
+      return;
+    }
 
     PlatformFile file = result.files.first;
     storyFile = File(result.files.single.path!);
@@ -56,7 +72,7 @@ class StoriesServices {
         );
       }
     }
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => StoryTrimmer(isVideo: isVideo!, file: storyFile!),
       ),
@@ -64,14 +80,17 @@ class StoriesServices {
   }
 
   // upload story to Supabase
-  uploadToStorage() async {
-    if (storyFile == null) return;
-
-    final fileName = dateTime.millisecondsSinceEpoch.toString();
+  uploadToStorage(File? outputFile) async {
+    if (outputFile == null) {
+      setLoadingState(false);
+      return;
+    }
+    var uuid = Uuid();
+    final fileName = uuid.v4();
     final path = "stories/$fileName";
     await Supabase.instance.client.storage
         .from("chatpfp")
-        .upload(path, storyFile!);
+        .upload(path, outputFile);
 
     final String publicUrl = Supabase.instance.client.storage
         .from('chatpfp')
@@ -87,10 +106,8 @@ class StoriesServices {
 
   uploadToFirestore(String storyData) async {
     // gerating a random id for story
-    var r = Random();
-    String storyId = String.fromCharCodes(
-      List.generate(20, (index) => r.nextInt(33) + 89),
-    );
+    var uuid = Uuid();
+    final storyId = uuid.v4();
     // updating story data on firebase firestore
     await firebaseFirestore
         .collection("users")
@@ -102,12 +119,15 @@ class StoriesServices {
           "story_data": storyData,
           "story_id": storyId,
         });
+    setLoadingState(false);
+    notifyListeners();
   }
 
   // get list of stories from all user withthen 1 day of uploading
   Future<List<Map<String, dynamic>>> getStrories() async {
+    setLoadingState(true);
     DateTime twentyHoursAgo = DateTime.now().subtract(Duration(days: 1));
-    List<Map<String, dynamic>> usersStories = [];
+
     QuerySnapshot storiesSnapshot =
         await firebaseFirestore
             .collectionGroup("stories")
@@ -116,9 +136,12 @@ class StoriesServices {
     print(storiesSnapshot);
 
     for (QueryDocumentSnapshot storyData in storiesSnapshot.docs) {
-      usersStories.add(storyData.data() as Map<String, dynamic>);
+      storiesList.add(storyData.data() as Map<String, dynamic>);
+      notifyListeners();
     }
-    print(usersStories);
-    return usersStories;
+    print(storiesList);
+    setLoadingState(false);
+    notifyListeners();
+    return storiesList;
   }
 }

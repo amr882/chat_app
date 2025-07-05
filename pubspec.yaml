@@ -47,10 +47,11 @@ dependencies:
   flutter_regex: ^0.0.3
   cached_network_image: ^3.4.1
   file_picker: ^10.2.0
-  zego_uikit_prebuilt_call: ^4.17.2
   flutter_native_splash: ^2.4.6
   video_trimmer: ^5.0.0
   flutter_file_info: ^0.3.0
+  provider: ^6.1.5
+  uuid: ^4.5.1
 
 
 flutter_native_splash:

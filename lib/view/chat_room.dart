@@ -4,7 +4,6 @@ import 'package:chat_app/components/message_bubble.dart';
 import 'package:chat_app/components/message_field.dart';
 import 'package:chat_app/components/message_list.dart';
 import 'package:chat_app/services/message_services.dart';
-import 'package:chat_app/view/call_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -180,11 +179,11 @@ class _ChatRoomState extends State<ChatRoom> {
                           ];
                           usersId.sort();
                           // String chatRoomId = usersId.join("_");
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => AudioCallPage(),
-                            ),
-                          );
+                          // Navigator.of(context).push(
+                          //   MaterialPageRoute(
+                          //     builder: (context) => AudioCallPage(),
+                          //   ),
+                          // );
                         },
                         child: Icon(Icons.call, color: Colors.white),
                       ),
