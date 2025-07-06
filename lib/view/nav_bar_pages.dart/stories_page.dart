@@ -76,7 +76,7 @@ class _StoriesPageState extends State<StoriesPage> {
                 ? Center(child: CircularProgressIndicator())
                 : FutureBuilder(
                   key: _futureBuilderKey,
-                  future: StoriesServices().getStrories(),
+                  future: StoriesServices().getStories(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
@@ -95,7 +95,7 @@ class _StoriesPageState extends State<StoriesPage> {
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         return Text(
-                          snapshot.data![index]["story_id"],
+                          snapshot.data![index][0]["UserId"].toString(),
                           style: TextStyle(color: Colors.white),
                         );
                       },

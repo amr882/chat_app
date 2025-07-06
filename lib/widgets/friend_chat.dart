@@ -51,20 +51,14 @@ class FriendChat extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(50),
-                          child:
-                              hasPhoto
-                                  ? Image.network(
-                                    firendPhoto,
-                                    fit: BoxFit.cover,
-                                    width: 8.h,
-                                    height: 8.h,
-                                  )
-                                  : Image.asset(
-                                    "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                    fit: BoxFit.cover,
-                                    width: 8.h,
-                                    height: 8.h,
-                                  ),
+                          child: Image.network(
+                            hasPhoto
+                                ? firendPhoto
+                                : "https://tjfiyddgeljrygtjgyov.supabase.co/storage/v1/object/public/chatpfp/uploads/userpfp.jpg",
+                            fit: BoxFit.cover,
+                            width: 8.h,
+                            height: 8.h,
+                          ),
                         ),
                         SizedBox(width: 20),
                         Column(

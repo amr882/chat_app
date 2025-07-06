@@ -183,17 +183,14 @@ class _ChatPageState extends State<ChatPage> {
                               height: 10.h,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(50),
-                                child:
-                                    userData["pfp"].toString().isNotEmpty
-                                        ? Image.network(
-                                          userData["pfp"].toString(),
-                                          fit: BoxFit.cover,
-                                          width: 8.h,
-                                          height: 8.h,
-                                        )
-                                        : Image.asset(
-                                          "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                        ),
+                                child: Image.network(
+                                  userData["pfp"].toString().isNotEmpty
+                                      ? userData["pfp"].toString()
+                                      : "https://tjfiyddgeljrygtjgyov.supabase.co/storage/v1/object/public/chatpfp/uploads/userpfp.jpg",
+                                  fit: BoxFit.cover,
+                                  width: 8.h,
+                                  height: 8.h,
+                                ),
                               ),
                             ),
                           ),

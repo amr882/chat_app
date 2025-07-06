@@ -143,16 +143,12 @@ class _ChatRoomState extends State<ChatRoom> {
                               height: 7.h,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(50),
-                                child:
-                                    widget.receverPfp.isNotEmpty
-                                        ? Image.network(
-                                          widget.receverPfp,
-                                          fit: BoxFit.cover,
-                                        )
-                                        : Image.asset(
-                                          "assets/e8d7d05f392d9c2cf0285ce928fb9f4a.jpg",
-                                          fit: BoxFit.cover,
-                                        ),
+                                child: Image.network(
+                                  widget.receverPfp.isNotEmpty
+                                      ? widget.receverPfp
+                                      : "https://tjfiyddgeljrygtjgyov.supabase.co/storage/v1/object/public/chatpfp/uploads/userpfp.jpg",
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),

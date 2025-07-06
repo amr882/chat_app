@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
-import 'dart:math';
 
 import 'package:chat_app/view/story_trimmer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,9 +16,9 @@ class StoriesServices extends ChangeNotifier {
   DateTime dateTime = DateTime.now();
 
   bool _isLoading = false;
-  final List<Map<String, dynamic>> _storiseList = [];
+  final List<List<Map<String, dynamic>>> _storiseList = [];
   bool get isLoading => _isLoading;
-  List<Map<String, dynamic>> get storiesList => _storiseList;
+  List<List<Map<String, dynamic>>> get storiesList => _storiseList;
 
   void setLoadingState(bool value) {
     _isLoading = value;
@@ -118,30 +117,47 @@ class StoriesServices extends ChangeNotifier {
           "uploading_date": dateTime,
           "story_data": storyData,
           "story_id": storyId,
+          "UserId": firebaseAuth.currentUser!.uid,
         });
     setLoadingState(false);
     notifyListeners();
   }
 
   // get list of stories from all user withthen 1 day of uploading
-  Future<List<Map<String, dynamic>>> getStrories() async {
+
+  Future<List<List<Map<String, dynamic>>>> getStories() async {
     setLoadingState(true);
-    DateTime twentyHoursAgo = DateTime.now().subtract(Duration(days: 1));
+
+    DateTime twentyHoursAgo = DateTime.now().subtract(Duration(hours: 20));
+    List<List<Map<String, dynamic>>> groupedStoriesList = [];
+    Map<String, List<Map<String, dynamic>>> userStoriesMap = {};
 
     QuerySnapshot storiesSnapshot =
         await firebaseFirestore
             .collectionGroup("stories")
             .where("uploading_date", isGreaterThan: twentyHoursAgo)
             .get();
-    print(storiesSnapshot);
 
-    for (QueryDocumentSnapshot storyData in storiesSnapshot.docs) {
-      storiesList.add(storyData.data() as Map<String, dynamic>);
-      notifyListeners();
+    for (QueryDocumentSnapshot storyDocument in storiesSnapshot.docs) {
+      Map<String, dynamic> storyData =
+          storyDocument.data() as Map<String, dynamic>;
+
+      String userId = storyDocument.reference.parent.parent!.id;
+      print("$userId+++++++++++++++++++++++++++++++++++++++++++++++++");
+
+      if (!userStoriesMap.containsKey(userId)) {
+        userStoriesMap[userId] = [];
+      }
+
+      userStoriesMap[userId]!.add(storyData);
     }
-    print(storiesList);
+
+    userStoriesMap.forEach((userId, stories) {
+      groupedStoriesList.add(stories);
+    });
     setLoadingState(false);
-    notifyListeners();
-    return storiesList;
+    print(groupedStoriesList);
+
+    return groupedStoriesList;
   }
 }

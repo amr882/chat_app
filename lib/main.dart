@@ -3,7 +3,6 @@ import 'package:chat_app/auth/sign_in.dart';
 import 'package:chat_app/components/custom_navigation_bar.dart';
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/services/stories_services.dart';
-import 'package:chat_app/view/nav_bar_pages.dart/chat_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +61,7 @@ class _MyAppState extends State<MyApp> {
 
           // FirebaseAuth.instance.currentUser == null ? SignIn() : HomePage(),
           routes: {
-            'homePage': (context) => ChatPage(),
+            'homePage': (context) => CustomNavigationBar(),
             "signIn": (context) => SignIn(),
           },
         );
