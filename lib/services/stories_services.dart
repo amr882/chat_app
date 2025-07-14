@@ -79,7 +79,7 @@ class StoriesServices extends ChangeNotifier {
   }
 
   // upload story to Supabase
-  uploadToStorage(File? outputFile) async {
+  uploadToStorage(File? outputFile, String? controllerText) async {
     if (outputFile == null) {
       setLoadingState(false);
       return;
@@ -94,7 +94,7 @@ class StoriesServices extends ChangeNotifier {
     final String publicUrl = Supabase.instance.client.storage
         .from('chatpfp')
         .getPublicUrl(path);
-    uploadToFirestore(publicUrl);
+    uploadToFirestore(publicUrl, controllerText ?? "");
     print("story uploaded to firebase");
 
     print("Story uploaded successfully! Public URL: $publicUrl");
@@ -103,21 +103,37 @@ class StoriesServices extends ChangeNotifier {
 
   // add story to firebase firestore
 
-  uploadToFirestore(String storyData) async {
+  uploadToFirestore(String storyMedia, String caption) async {
     // gerating a random id for story
     var uuid = Uuid();
     final storyId = uuid.v4();
     // updating story data on firebase firestore
+    Map<String, dynamic> userData = {};
+    final docRef = firebaseFirestore
+        .collection("users")
+        .doc(firebaseAuth.currentUser!.uid);
+    docRef.get().then((DocumentSnapshot doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      userData = data;
+    });
+
     await firebaseFirestore
         .collection("users")
         .doc(firebaseAuth.currentUser!.uid)
         .collection("stories")
         .doc(storyId)
         .set({
-          "uploading_date": dateTime,
-          "story_data": storyData,
-          "story_id": storyId,
-          "UserId": firebaseAuth.currentUser!.uid,
+          "storyData": {
+            "uploading_date": dateTime,
+            "story_media": storyMedia,
+            "story_id": storyId,
+            "caption": caption,
+          },
+          "userData": {
+            "userName": userData["Uname"],
+            "pfp": userData["pfp"],
+            "UserId": firebaseAuth.currentUser!.uid,
+          },
         });
     setLoadingState(false);
     notifyListeners();

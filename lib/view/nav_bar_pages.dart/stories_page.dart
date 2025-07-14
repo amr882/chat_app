@@ -95,7 +95,7 @@ class _StoriesPageState extends State<StoriesPage> {
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         return Text(
-                          snapshot.data![index][0]["UserId"].toString(),
+                          snapshot.data![index][0]["userData"]["UserId"],
                           style: TextStyle(color: Colors.white),
                         );
                       },

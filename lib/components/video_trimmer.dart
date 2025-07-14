@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:chat_app/components/caption_field.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -56,6 +57,7 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
     _loadVideo();
   }
 
+  TextEditingController controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -88,7 +90,7 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
           body: Builder(
             builder:
                 (context) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  padding: EdgeInsets.only(top: 6.h),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
@@ -117,26 +119,24 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                             ],
                           ),
 
-                          GestureDetector(
-                            child: Center(
-                              child: TrimViewer(
-                                trimmer: _trimmer,
-                                viewerHeight: 50.0,
-                                showDuration: false,
-                                viewerWidth: MediaQuery.of(context).size.width,
-                                maxVideoLength: const Duration(seconds: 30),
-                                onChangeStart: (value) => _startValue = value,
-                                onChangeEnd: (value) => _endValue = value,
-                                onChangePlaybackState: (value) {
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    if (mounted) {
-                                      setState(() => _isPlaying = value);
-                                    }
-                                  });
-                                },
-                              ),
+                          Center(
+                            child: TrimViewer(
+                              trimmer: _trimmer,
+                              viewerHeight: 50.0,
+                              showDuration: false,
+                              viewerWidth: MediaQuery.of(context).size.width,
+                              maxVideoLength: const Duration(seconds: 30),
+                              onChangeStart: (value) => _startValue = value,
+                              onChangeEnd: (value) => _endValue = value,
+                              onChangePlaybackState: (value) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  if (mounted) {
+                                    setState(() => _isPlaying = value);
+                                  }
+                                });
+                              },
                             ),
                           ),
                         ],
@@ -145,6 +145,8 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () async {
+                            FocusScope.of(context).requestFocus(FocusNode());
+
                             bool playbackState = await _trimmer
                                 .videoPlaybackControl(
                                   startValue: _startValue,
@@ -157,42 +159,58 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                         ),
                       ),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w),
-                        child: Row(
-                          children: [
-                            Expanded(child: TextField()),
-                            GestureDetector(
-                              onTap:
-                                  _progressVisibility
-                                      ? null
-                                      : () async {
-                                        final outputPath = await _saveVideo();
-                                        if (outputPath != null) {
-                                          print('OUTPUT PATH: $outputPath');
-                                          File outputFile = File(outputPath);
-                                          Provider.of<StoriesServices>(
-                                            context,
-                                            listen: false,
-                                          ).uploadToStorage(outputFile);
+                      Container(
+                        width: 100.w,
+                        height: 13.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xff323741),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 3.w),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: CaptionField(controller: controller),
+                              ),
+                              GestureDetector(
+                                onTap:
+                                    _progressVisibility
+                                        ? null
+                                        : () async {
+                                          final outputPath = await _saveVideo();
+                                          if (outputPath != null) {
+                                            print('OUTPUT PATH: $outputPath');
+                                            File outputFile = File(outputPath);
+                                            Provider.of<StoriesServices>(
+                                              context,
+                                              listen: false,
+                                            ).uploadToStorage(
+                                              outputFile,
+                                              controller.text,
+                                            );
 
-                                          Navigator.of(context).pop();
-                                        }
-                                      },
-                              child: Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Color(0xff7c01f6),
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                                child: SvgPicture.asset(
-                                  "assets/send_story.svg",
-                                  height: 3.5.h,
-                                  color: Colors.white,
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff7c01f6),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: SvgPicture.asset(
+                                    "assets/send_story.svg",
+                                    height: 3.5.h,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],

@@ -11,6 +11,6 @@ class StoryTrimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return isVideo ? VideoTrimmer(file) : ImageCrop();
+    return isVideo ? VideoTrimmer(file) : ImageCrop(pickedImage: file);
   }
 }
