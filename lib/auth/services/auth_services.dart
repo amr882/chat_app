@@ -14,7 +14,7 @@ class AuthServices {
     String emailAddress,
     String password,
     BuildContext context,
-    String pfp,
+    String? pfp,
   ) async {
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(

@@ -104,15 +104,13 @@ class StoriesServices extends ChangeNotifier {
   // add story to firebase firestore
 
   uploadToFirestore(String storyMedia, String caption) async {
-    // gerating a random id for story
     var uuid = Uuid();
     final storyId = uuid.v4();
-    // updating story data on firebase firestore
-    Map<String, dynamic> userData = {};
     final docRef = firebaseFirestore
         .collection("users")
         .doc(firebaseAuth.currentUser!.uid);
-    docRef.get().then((DocumentSnapshot doc) {
+    Map<String, dynamic> userData = {};
+    await docRef.get().then((DocumentSnapshot doc) {
       final data = doc.data() as Map<String, dynamic>;
       userData = data;
     });
@@ -123,57 +121,75 @@ class StoriesServices extends ChangeNotifier {
         .collection("stories")
         .doc(storyId)
         .set({
-          "storyData": {
-            "uploading_date": dateTime,
-            "story_media": storyMedia,
-            "story_id": storyId,
-            "caption": caption,
-          },
-          "userData": {
-            "userName": userData["Uname"],
-            "pfp": userData["pfp"],
-            "UserId": firebaseAuth.currentUser!.uid,
-          },
+          "uploading_date": dateTime,
+          "story_media": storyMedia,
+          "story_id": storyId,
+          "caption": caption,
+          "userName": userData["Uname"],
+          "pfp": userData["pfp"],
+          "UserId": firebaseAuth.currentUser!.uid,
         });
     setLoadingState(false);
     notifyListeners();
   }
 
-  // get list of stories from all user withthen 1 day of uploading
-
+  // get list of stories from all user within 1 day of uploading
   Future<List<List<Map<String, dynamic>>>> getStories() async {
     setLoadingState(true);
 
-    DateTime twentyHoursAgo = DateTime.now().subtract(Duration(hours: 20));
+    DateTime twentyHoursAgo = DateTime.now().subtract(
+      const Duration(hours: 24),
+    );
     List<List<Map<String, dynamic>>> groupedStoriesList = [];
     Map<String, List<Map<String, dynamic>>> userStoriesMap = {};
+    String? currentUserId = firebaseAuth.currentUser?.uid;
 
-    QuerySnapshot storiesSnapshot =
+    if (currentUserId != null) {
+      QuerySnapshot currentUserStoriesSnapshot =
+          await firebaseFirestore
+              .collection("users")
+              .doc(currentUserId)
+              .collection("stories")
+              .where("uploading_date", isGreaterThan: twentyHoursAgo)
+              .get();
+
+      if (currentUserStoriesSnapshot.docs.isNotEmpty) {
+        List<Map<String, dynamic>> currentUserStories = [];
+        for (QueryDocumentSnapshot storyDocument
+            in currentUserStoriesSnapshot.docs) {
+          currentUserStories.add(storyDocument.data() as Map<String, dynamic>);
+        }
+        groupedStoriesList.add(currentUserStories);
+        userStoriesMap[currentUserId] = currentUserStories;
+      }
+    }
+
+    QuerySnapshot allStoriesSnapshot =
         await firebaseFirestore
             .collectionGroup("stories")
             .where("uploading_date", isGreaterThan: twentyHoursAgo)
             .get();
 
-    for (QueryDocumentSnapshot storyDocument in storiesSnapshot.docs) {
+    for (QueryDocumentSnapshot storyDocument in allStoriesSnapshot.docs) {
       Map<String, dynamic> storyData =
           storyDocument.data() as Map<String, dynamic>;
-
       String userId = storyDocument.reference.parent.parent!.id;
-      print("$userId+++++++++++++++++++++++++++++++++++++++++++++++++");
 
-      if (!userStoriesMap.containsKey(userId)) {
-        userStoriesMap[userId] = [];
+      if (currentUserId == null || userId != currentUserId) {
+        if (!userStoriesMap.containsKey(userId)) {
+          userStoriesMap[userId] = [];
+        }
+        userStoriesMap[userId]!.add(storyData);
       }
-
-      userStoriesMap[userId]!.add(storyData);
     }
-
     userStoriesMap.forEach((userId, stories) {
-      groupedStoriesList.add(stories);
+      if (currentUserId == null || userId != currentUserId) {
+        groupedStoriesList.add(stories);
+      }
     });
+
     setLoadingState(false);
     print(groupedStoriesList);
-
     return groupedStoriesList;
   }
 }

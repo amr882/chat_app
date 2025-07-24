@@ -1,3 +1,4 @@
+import 'package:chat_app/components/stories_viewer.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,7 +15,7 @@ class StoriesPage extends StatefulWidget {
 class _StoriesPageState extends State<StoriesPage> {
   Key _futureBuilderKey = UniqueKey();
 
-  stories() async {
+  addStory() async {
     await StoriesServices().pickStory(context);
     setState(() {
       _futureBuilderKey = UniqueKey();
@@ -65,7 +66,7 @@ class _StoriesPageState extends State<StoriesPage> {
             ),
             onPressed: () {
               if (!storiesService.isLoading) {
-                stories();
+                addStory();
               }
             },
           ),
@@ -90,13 +91,28 @@ class _StoriesPageState extends State<StoriesPage> {
                         ),
                       );
                     }
+
                     print(snapshot.data);
                     return ListView.builder(
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
-                        return Text(
-                          snapshot.data![index][0]["userData"]["UserId"],
-                          style: TextStyle(color: Colors.white),
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => StoriesViewer(
+                                      usersStoriesIndex: snapshot.data!.length,
+                                      allStories: snapshot.data,
+                                    ),
+                              ),
+                            );
+                          },
+
+                          child: Text(
+                            snapshot.data![index][0]["UserId"],
+                            style: TextStyle(color: Colors.white),
+                          ),
                         );
                       },
                     );

@@ -1,21 +1,23 @@
 // Dart imports:
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:io';
 import 'dart:math';
 
-// Flutter imports:
 import 'package:chat_app/components/caption_field.dart';
+import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-// Package imports:
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pro_image_editor/designs/whatsapp/whatsapp.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
+import 'package:provider/provider.dart';
+import 'package:sizer/sizer.dart';
+import 'package:uuid/uuid.dart';
 
-// Project imports:
-
-/// The WhatsApp design example
 class ImageCrop extends StatefulWidget {
-  /// Creates a new [ImageCrop] widget.
   const ImageCrop({super.key, required this.file});
 
   /// The URL of the image to display.
@@ -96,6 +98,21 @@ class _ImageCropState extends State<ImageCrop> {
           widget.file,
 
           callbacks: ProImageEditorCallbacks(
+            onImageEditingComplete: (bytes) async {
+              // Convert Uint8List bytes to a File
+              final tempDir = await getTemporaryDirectory();
+              final uuid = Uuid();
+              final fileName = '${uuid.v4()}.png';
+              final filePath = '${tempDir.path}/$fileName';
+              final File resultFile = File(filePath);
+              await resultFile.writeAsBytes(bytes);
+
+              Provider.of<StoriesServices>(
+                context,
+                listen: false,
+              ).uploadToStorage(resultFile, controller.text);
+              Navigator.of(context).pop();
+            },
             mainEditorCallbacks: MainEditorCallbacks(
               onScaleStart: _whatsAppHelper.onScaleStart,
               onScaleUpdate: (details) {},
@@ -366,14 +383,8 @@ class _ImageCropState extends State<ImageCrop> {
         canUndo: editor.canUndo,
         openEditor: editor.isSubEditorOpen,
       ),
-      if (_useMaterialDesign)
-        WhatsAppOpenFilterBtn(
-          filterTextOffsetY: 90,
-          configs: editor.configs,
-          opacity: opacity,
-        ),
+
       _buildDemoSendArea(editor, opacity),
-      WhatsappFilters(editor: editor, whatsAppHelper: _whatsAppHelper),
     ];
   }
 
@@ -390,38 +401,44 @@ class _ImageCropState extends State<ImageCrop> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 7, 16, 12),
-                      child: CaptionField(controller: controller),
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      20,
+                      16,
+                      20 +
+                          (editor.isSubEditorOpen
+                              ? 0
+                              : MediaQuery.viewInsetsOf(context).bottom),
                     ),
-                  ),
-                  Flexible(
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        7,
-                        16,
-                        12 +
-                            (editor.isSubEditorOpen
-                                ? 0
-                                : MediaQuery.viewInsetsOf(context).bottom),
+                    decoration: BoxDecoration(
+                      color: Color(0xff323741),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(15),
+                        topRight: Radius.circular(15),
                       ),
-                      color: Colors.black38,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              editor.doneEditing();
-                            },
-                            icon: const Icon(Icons.send),
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFF0DA886),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(child: CaptionField(controller: controller)),
+                        GestureDetector(
+                          onTap: () async {
+                            editor.doneEditing();
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Color(0xff7c01f6),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: SvgPicture.asset(
+                              "assets/send_story.svg",
+                              height: 3.5.h,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

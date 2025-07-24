@@ -53,6 +53,8 @@ dependencies:
   provider: ^6.1.5
   uuid: ^4.5.1
   pro_image_editor: ^10.4.1
+  path_provider: ^2.1.5
+  story_view: ^0.16.6
 
 
 flutter_native_splash:

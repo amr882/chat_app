@@ -31,7 +31,8 @@ class _SignUpState extends State<SignUp> {
   GlobalKey<FormState> passwordFormState = GlobalKey();
   GlobalKey<FormState> confirnPasswordFormState = GlobalKey();
 
-  String pfpUrl = "";
+  String pfpUrl =
+      "https://tjfiyddgeljrygtjgyov.supabase.co/storage/v1/object/public/chatpfp/uploads/userpfp.jpg";
   bool isLoading = false;
   // auth
   Future<void> signUp() async {
@@ -147,20 +148,12 @@ class _SignUpState extends State<SignUp> {
                             ? Center(child: CircularProgressIndicator())
                             : ClipRRect(
                               borderRadius: BorderRadius.circular(50),
-                              child:
-                                  pfpUrl.isNotEmpty
-                                      ? Image.network(
-                                        pfpUrl,
-                                        fit: BoxFit.cover,
-                                        width: 12.h,
-                                        height: 12.h,
-                                      )
-                                      : Image.file(
-                                        imageFile!,
-                                        fit: BoxFit.cover,
-                                        width: 12.h,
-                                        height: 12.h,
-                                      ),
+                              child: Image.network(
+                                pfpUrl,
+                                fit: BoxFit.cover,
+                                width: 12.h,
+                                height: 12.h,
+                              ),
                             ),
                   ),
                 ),
