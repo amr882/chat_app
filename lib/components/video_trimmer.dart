@@ -191,8 +191,8 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                                             ).uploadToStorage(
                                               outputFile,
                                               controller.text,
+                                              "video",
                                             );
-
                                             Navigator.of(context).pop();
                                           }
                                         },

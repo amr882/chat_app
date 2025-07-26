@@ -1,6 +1,8 @@
 import 'package:chat_app/components/stories_viewer.dart';
+import 'package:chat_app/components/user_story_card.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/material.dart';
+import 'package:get_time_ago/get_time_ago.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
@@ -93,9 +95,12 @@ class _StoriesPageState extends State<StoriesPage> {
                     }
 
                     print(snapshot.data);
+
                     return ListView.builder(
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
+                        int lastStory =
+                            snapshot.data![index].last["uploading_date"];
                         return GestureDetector(
                           onTap: () {
                             Navigator.of(context).push(
@@ -109,9 +114,13 @@ class _StoriesPageState extends State<StoriesPage> {
                             );
                           },
 
-                          child: Text(
-                            snapshot.data![index][0]["UserId"],
-                            style: TextStyle(color: Colors.white),
+                          child: UserStoryCard(
+                            userPhoto:
+                                "https://i.pinimg.com/736x/45/31/f0/4531f028afc94f89ff337069a3ef0fef.jpg",
+                            userName: snapshot.data![index][0]["userName"],
+                            uploadDate: GetTimeAgo.parse(
+                              DateTime.fromMicrosecondsSinceEpoch(lastStory),
+                            ),
                           ),
                         );
                       },

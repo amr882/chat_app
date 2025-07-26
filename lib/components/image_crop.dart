@@ -110,7 +110,7 @@ class _ImageCropState extends State<ImageCrop> {
               Provider.of<StoriesServices>(
                 context,
                 listen: false,
-              ).uploadToStorage(resultFile, controller.text);
+              ).uploadToStorage(resultFile, controller.text, "image");
               Navigator.of(context).pop();
             },
             mainEditorCallbacks: MainEditorCallbacks(

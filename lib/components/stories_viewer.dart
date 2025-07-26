@@ -1,3 +1,5 @@
+import 'package:chat_app/services/stories_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:story_view/controller/story_controller.dart';
 import 'package:story_view/utils.dart';
@@ -18,9 +20,18 @@ class StoriesViewer extends StatefulWidget {
 
 class _StoriesViewerState extends State<StoriesViewer> {
   final controller = StoryController();
+
+  gttt() async {
+    StoriesServices().markAsViewed(
+      "oPXGfmVSJwPwGQNr2mraZLWIAde2",
+      "500b7c5e-aa8a-43db-b601-90b8a7a79d07",
+    );
+  }
+
   @override
   void initState() {
     print(widget.usersStoriesIndex.toString());
+    gttt();
     super.initState();
   }
 

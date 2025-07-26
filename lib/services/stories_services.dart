@@ -13,7 +13,7 @@ import 'package:uuid/uuid.dart';
 class StoriesServices extends ChangeNotifier {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  DateTime dateTime = DateTime.now();
+  final dateTime = Timestamp.now().microsecondsSinceEpoch;
 
   bool _isLoading = false;
   final List<List<Map<String, dynamic>>> _storiseList = [];
@@ -79,7 +79,11 @@ class StoriesServices extends ChangeNotifier {
   }
 
   // upload story to Supabase
-  uploadToStorage(File? outputFile, String? controllerText) async {
+  uploadToStorage(
+    File? outputFile,
+    String? controllerText,
+    String storyType,
+  ) async {
     if (outputFile == null) {
       setLoadingState(false);
       return;
@@ -94,7 +98,7 @@ class StoriesServices extends ChangeNotifier {
     final String publicUrl = Supabase.instance.client.storage
         .from('chatpfp')
         .getPublicUrl(path);
-    uploadToFirestore(publicUrl, controllerText ?? "");
+    uploadToFirestore(publicUrl, controllerText ?? "", storyType);
     print("story uploaded to firebase");
 
     print("Story uploaded successfully! Public URL: $publicUrl");
@@ -103,7 +107,7 @@ class StoriesServices extends ChangeNotifier {
 
   // add story to firebase firestore
 
-  uploadToFirestore(String storyMedia, String caption) async {
+  uploadToFirestore(String storyMedia, String caption, String storyType) async {
     var uuid = Uuid();
     final storyId = uuid.v4();
     final docRef = firebaseFirestore
@@ -128,6 +132,8 @@ class StoriesServices extends ChangeNotifier {
           "userName": userData["Uname"],
           "pfp": userData["pfp"],
           "UserId": firebaseAuth.currentUser!.uid,
+          "story_type": storyType,
+          "viewers": [],
         });
     setLoadingState(false);
     notifyListeners();
@@ -137,9 +143,10 @@ class StoriesServices extends ChangeNotifier {
   Future<List<List<Map<String, dynamic>>>> getStories() async {
     setLoadingState(true);
 
-    DateTime twentyHoursAgo = DateTime.now().subtract(
-      const Duration(hours: 24),
-    );
+    final twentyHoursAgo =
+        DateTime.now()
+            .subtract(const Duration(hours: 24))
+            .microsecondsSinceEpoch;
     List<List<Map<String, dynamic>>> groupedStoriesList = [];
     Map<String, List<Map<String, dynamic>>> userStoriesMap = {};
     String? currentUserId = firebaseAuth.currentUser?.uid;
@@ -191,5 +198,24 @@ class StoriesServices extends ChangeNotifier {
     setLoadingState(false);
     print(groupedStoriesList);
     return groupedStoriesList;
+  }
+
+  markAsViewed(String uploaderId, String storyId) async {
+    await firebaseFirestore
+        .collection("users")
+        .doc(firebaseAuth.currentUser!.uid)
+        .get()
+        .then((value) {
+          var userData = value.data();
+          print(userData);
+          firebaseFirestore
+              .collection("users")
+              .doc(uploaderId)
+              .collection("stories")
+              .doc(storyId)
+              .update({
+                "viewers": FieldValue.arrayUnion([userData]),
+              });
+        });
   }
 }
