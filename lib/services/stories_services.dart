@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:video_player/video_player.dart';
 
 class StoriesServices extends ChangeNotifier {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -83,12 +84,14 @@ class StoriesServices extends ChangeNotifier {
     File? outputFile,
     String? controllerText,
     String storyType,
+    Duration storyDuration,
   ) async {
     if (outputFile == null) {
       setLoadingState(false);
       return;
     }
     var uuid = Uuid();
+
     final fileName = uuid.v4();
     final path = "stories/$fileName";
     await Supabase.instance.client.storage
@@ -98,7 +101,12 @@ class StoriesServices extends ChangeNotifier {
     final String publicUrl = Supabase.instance.client.storage
         .from('chatpfp')
         .getPublicUrl(path);
-    uploadToFirestore(publicUrl, controllerText ?? "", storyType);
+    uploadToFirestore(
+      publicUrl,
+      controllerText ?? "",
+      storyType,
+      storyDuration,
+    );
     print("story uploaded to firebase");
 
     print("Story uploaded successfully! Public URL: $publicUrl");
@@ -107,7 +115,12 @@ class StoriesServices extends ChangeNotifier {
 
   // add story to firebase firestore
 
-  uploadToFirestore(String storyMedia, String caption, String storyType) async {
+  uploadToFirestore(
+    String storyMedia,
+    String caption,
+    String storyType,
+    Duration storyDuration,
+  ) async {
     var uuid = Uuid();
     final storyId = uuid.v4();
     final docRef = firebaseFirestore
@@ -134,6 +147,7 @@ class StoriesServices extends ChangeNotifier {
           "UserId": firebaseAuth.currentUser!.uid,
           "story_type": storyType,
           "viewers": [],
+          "story_duration": storyDuration.inMilliseconds,
         });
     setLoadingState(false);
     notifyListeners();

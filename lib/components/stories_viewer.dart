@@ -1,16 +1,15 @@
-import 'package:chat_app/services/stories_services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:story_view/controller/story_controller.dart';
 import 'package:story_view/utils.dart';
 import 'package:story_view/widgets/story_view.dart';
 
 class StoriesViewer extends StatefulWidget {
-  final int usersStoriesIndex;
+  final int storyIndex;
   final List<List<Map<String, dynamic>>>? allStories;
+
   const StoriesViewer({
     super.key,
-    required this.usersStoriesIndex,
+    required this.storyIndex,
     required this.allStories,
   });
 
@@ -20,54 +19,88 @@ class StoriesViewer extends StatefulWidget {
 
 class _StoriesViewerState extends State<StoriesViewer> {
   final controller = StoryController();
+  List<List<Map<String, dynamic>>> _displayStories = [];
+  // get all stories after the selected story index
+  // storiesAfterIndex() {
+  //   int indexToRemoveBefore = widget.storyIndex;
+  //   if (indexToRemoveBefore > 0 &&
+  //       indexToRemoveBefore <= _displayStories!.length) {
+  //     _displayStories!.removeRange(0, indexToRemoveBefore);
+  //     print(_displayStories);
+  //   } else if (indexToRemoveBefore == 0) {
+  //     print("first");
+  //   } else {}
+  // }
 
-  gttt() async {
-    StoriesServices().markAsViewed(
-      "oPXGfmVSJwPwGQNr2mraZLWIAde2",
-      "500b7c5e-aa8a-43db-b601-90b8a7a79d07",
-    );
-  }
+  markAsViewedByCurrentUser() async {}
 
   @override
   void initState() {
-    print(widget.usersStoriesIndex.toString());
-    gttt();
     super.initState();
+
+    if (widget.allStories!.isNotEmpty) {
+      _displayStories = List.from(widget.allStories!);
+      if (widget.storyIndex > 0 && widget.storyIndex < _displayStories.length) {
+        _displayStories.removeRange(0, widget.storyIndex);
+      } else if (widget.storyIndex >= _displayStories.length) {
+        _displayStories = [];
+      }
+    }
   }
 
+  final PageController _pageController = PageController();
   @override
   Widget build(context) {
-    int index = widget.usersStoriesIndex;
-    List<StoryItem> storyItems = [
-      StoryItem.pageImage(
-        caption: Text("111", style: TextStyle(color: Colors.white)),
-        controller: controller,
-        url:
-            "https://i.pinimg.com/1200x/3a/8e/2d/3a8e2db0e5e3c48a6eb07f4f1868cf8d.jpg",
-      ),
-      StoryItem.pageImage(
-        url:
-            'https://i.pinimg.com/1200x/06/3f/c6/063fc6f586f932aa13549a702280a82f.jpg',
-        controller: controller,
-      ),
-    ]; // your list of stories
-
     return Scaffold(
       body: PageView(
-        children: [
-          StoryView(
+        controller: _pageController,
+        children: List.generate(_displayStories.length, (userIndex) {
+          List<StoryItem>
+          storyItems = List.generate(_displayStories[userIndex].length, (
+            storyIndex,
+          ) {
+            return _displayStories[userIndex][storyIndex]["story_type"] ==
+                    "video"
+                ? StoryItem.pageVideo(
+                  duration: Duration(
+                    milliseconds:
+                        _displayStories[userIndex][storyIndex]["story_duration"],
+                  ),
+                  _displayStories[userIndex][storyIndex]["story_media"],
+                  controller: controller,
+                  caption: Text(
+                    _displayStories[userIndex][storyIndex]["caption"] ?? "",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )
+                : StoryItem.pageImage(
+                  duration: Duration(
+                    milliseconds:
+                        _displayStories[userIndex][storyIndex]["story_duration"],
+                  ),
+                  caption: Text(
+                    _displayStories[userIndex][storyIndex]["caption"] ?? "",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  controller: controller,
+                  url: _displayStories[userIndex][storyIndex]["story_media"],
+                );
+          });
+
+          return StoryView(
             controller: controller,
             repeat: false,
-            onStoryShow: (storyItem, index) {
-              print("viewed  ++++++++++++++++--------");
+            onStoryShow: (storyItem, storyIndex) {
+              markAsViewedByCurrentUser();
             },
             onComplete: () {
-              if (index < 1) {
-                print("there is more");
-                index--;
-              } else {
-                print("thats all done");
+              if (_pageController.page?.round() == _displayStories.length - 1) {
                 Navigator.of(context).pop();
+              } else {
+                _pageController.nextPage(
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                );
               }
             },
             onVerticalSwipeComplete: (direction) {
@@ -76,8 +109,8 @@ class _StoriesViewerState extends State<StoriesViewer> {
               }
             },
             storyItems: storyItems,
-          ),
-        ],
+          );
+        }),
       ),
     );
   }

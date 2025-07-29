@@ -107,7 +107,7 @@ class _StoriesPageState extends State<StoriesPage> {
                               MaterialPageRoute(
                                 builder:
                                     (context) => StoriesViewer(
-                                      usersStoriesIndex: snapshot.data!.length,
+                                      storyIndex: index,
                                       allStories: snapshot.data,
                                     ),
                               ),

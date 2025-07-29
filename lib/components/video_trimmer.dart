@@ -183,6 +183,11 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                                         : () async {
                                           final outputPath = await _saveVideo();
                                           if (outputPath != null) {
+                                            Duration videoDuration =
+                                                _trimmer
+                                                    .videoPlayerController!
+                                                    .value
+                                                    .duration;
                                             print('OUTPUT PATH: $outputPath');
                                             File outputFile = File(outputPath);
                                             Provider.of<StoriesServices>(
@@ -192,6 +197,7 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                                               outputFile,
                                               controller.text,
                                               "video",
+                                              videoDuration,
                                             );
                                             Navigator.of(context).pop();
                                           }
