@@ -1,6 +1,11 @@
-import 'package:chat_app/components/stories_viewer.dart';
-import 'package:chat_app/components/user_story_card.dart';
+// ignore_for_file: avoid_types_as_parameter_names
+
+import 'package:chat_app/components/stories/my_story_card.dart';
+import 'package:chat_app/components/stories/stories_viewer.dart';
+import 'package:chat_app/components/stories/user_story_card.dart';
 import 'package:chat_app/services/stories_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,16 +20,39 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
-  Key _futureBuilderKey = UniqueKey();
+  Key _friendStoriesFutureKey = UniqueKey();
+  Key _myStoriesFutureKey = UniqueKey();
 
   addStory() async {
     await StoriesServices().pickStory(context);
+
     setState(() {
-      _futureBuilderKey = UniqueKey();
+      _friendStoriesFutureKey = UniqueKey();
+      _myStoriesFutureKey = UniqueKey();
     });
     print(
       "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++uploaded ",
     );
+  }
+
+  final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  String? pfp;
+  getCurrentUserPfp() async {
+    await firebaseFirestore
+        .collection("users")
+        .doc(firebaseAuth.currentUser!.uid)
+        .get()
+        .then((value) {
+          var data = value.data() as Map<String, dynamic>;
+          pfp = data["pfp"];
+        });
+  }
+
+  @override
+  void initState() {
+    getCurrentUserPfp();
+    super.initState();
   }
 
   @override
@@ -77,55 +105,85 @@ class _StoriesPageState extends State<StoriesPage> {
         body:
             storiesService.isLoading
                 ? Center(child: CircularProgressIndicator())
-                : FutureBuilder(
-                  key: _futureBuilderKey,
-                  future: StoriesServices().getStories(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
+                : Column(
+                  children: [
+                    // get my stories
+                    FutureBuilder(
+                      key: _myStoriesFutureKey,
+                      future: StoriesServices().getCurrentUserStories(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Container();
+                        }
 
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Text(
-                          "No stories",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return MyStoryCard(userPhoto: pfp!);
+                        }
+                        int lastStory = snapshot.data!.last["uploading_date"];
+                        return UserStoryCard(
+                          totalStoriesLength: snapshot.data!.length,
+                          userPhoto: pfp!,
+                          userName: "my stories",
+                          uploadDate: GetTimeAgo.parse(
+                            DateTime.fromMicrosecondsSinceEpoch(lastStory),
+                          ),
+                          storyViewedCount: 0,
+                        );
+                      },
+                    ),
 
-                    print(snapshot.data);
+                    // get friedns stories
+                    FutureBuilder(
+                      key: _friendStoriesFutureKey,
+                      future: StoriesServices().getFirendsStories(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Container();
+                        }
 
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        int lastStory =
-                            snapshot.data![index].last["uploading_date"];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => StoriesViewer(
-                                      storyIndex: index,
-                                      allStories: snapshot.data,
+                        return Expanded(
+                          child: ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              int lastStory =
+                                  snapshot.data![index].last["uploading_date"];
+                              int viewersCount = StoriesServices()
+                                  .getStoryViewedCount(snapshot.data![index]);
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => StoriesViewer(
+                                            storyIndex: index,
+                                            allStories: snapshot.data,
+                                          ),
                                     ),
-                              ),
-                            );
-                          },
+                                  );
+                                },
 
-                          child: UserStoryCard(
-                            userPhoto:
-                                "https://i.pinimg.com/736x/45/31/f0/4531f028afc94f89ff337069a3ef0fef.jpg",
-                            userName: snapshot.data![index][0]["userName"],
-                            uploadDate: GetTimeAgo.parse(
-                              DateTime.fromMicrosecondsSinceEpoch(lastStory),
-                            ),
+                                child: UserStoryCard(
+                                  totalStoriesLength:
+                                      snapshot.data![index].length,
+                                  userPhoto: snapshot.data![index][0]["pfp"],
+                                  userName:
+                                      snapshot.data![index][0]["userName"],
+                                  uploadDate: GetTimeAgo.parse(
+                                    DateTime.fromMicrosecondsSinceEpoch(
+                                      lastStory,
+                                    ),
+                                  ),
+                                  storyViewedCount: viewersCount,
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
       ),
     );

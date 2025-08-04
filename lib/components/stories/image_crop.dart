@@ -4,7 +4,7 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:chat_app/components/caption_field.dart';
+import 'package:chat_app/components/messages/caption_field.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

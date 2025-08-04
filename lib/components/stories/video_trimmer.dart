@@ -2,7 +2,7 @@
 
 import 'dart:io';
 
-import 'package:chat_app/components/caption_field.dart';
+import 'package:chat_app/components/messages/caption_field.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

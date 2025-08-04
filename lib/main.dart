@@ -1,6 +1,6 @@
 import 'package:chat_app/auth/keys.dart';
 import 'package:chat_app/auth/sign_in.dart';
-import 'package:chat_app/components/custom_navigation_bar.dart';
+import 'package:chat_app/components/messages/custom_navigation_bar.dart';
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/services/stories_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';

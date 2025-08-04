@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:chat_app/components/image_crop.dart';
-import 'package:chat_app/components/video_trimmer.dart';
+import 'package:chat_app/components/stories/image_crop.dart';
+import 'package:chat_app/components/stories/video_trimmer.dart';
 import 'package:flutter/material.dart';
 
 class StoryTrimmer extends StatelessWidget {

@@ -1,6 +1,7 @@
+import 'package:chat_app/services/stories_services.dart';
+import 'package:chat_app/view/story_view_item.dart';
 import 'package:flutter/material.dart';
 import 'package:story_view/controller/story_controller.dart';
-import 'package:story_view/utils.dart';
 import 'package:story_view/widgets/story_view.dart';
 
 class StoriesViewer extends StatefulWidget {
@@ -20,19 +21,6 @@ class StoriesViewer extends StatefulWidget {
 class _StoriesViewerState extends State<StoriesViewer> {
   final controller = StoryController();
   List<List<Map<String, dynamic>>> _displayStories = [];
-  // get all stories after the selected story index
-  // storiesAfterIndex() {
-  //   int indexToRemoveBefore = widget.storyIndex;
-  //   if (indexToRemoveBefore > 0 &&
-  //       indexToRemoveBefore <= _displayStories!.length) {
-  //     _displayStories!.removeRange(0, indexToRemoveBefore);
-  //     print(_displayStories);
-  //   } else if (indexToRemoveBefore == 0) {
-  //     print("first");
-  //   } else {}
-  // }
-
-  markAsViewedByCurrentUser() async {}
 
   @override
   void initState() {
@@ -87,12 +75,9 @@ class _StoriesViewerState extends State<StoriesViewer> {
                 );
           });
 
-          return StoryView(
-            controller: controller,
-            repeat: false,
-            onStoryShow: (storyItem, storyIndex) {
-              markAsViewedByCurrentUser();
-            },
+          return StoryViewItem(
+            storyController: controller,
+            storyItems: storyItems,
             onComplete: () {
               if (_pageController.page?.round() == _displayStories.length - 1) {
                 Navigator.of(context).pop();
@@ -103,12 +88,12 @@ class _StoriesViewerState extends State<StoriesViewer> {
                 );
               }
             },
-            onVerticalSwipeComplete: (direction) {
-              if (direction == Direction.down) {
-                Navigator.pop(context);
-              }
+            onStoryShow: (storyItem, storyIndex) async {
+              StoriesServices().markAsViewed(
+                _displayStories[userIndex][storyIndex]["UserId"],
+                _displayStories[userIndex][storyIndex]["story_id"],
+              );
             },
-            storyItems: storyItems,
           );
         }),
       ),

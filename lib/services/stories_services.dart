@@ -9,12 +9,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:video_player/video_player.dart';
 
 class StoriesServices extends ChangeNotifier {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  final dateTime = Timestamp.now().microsecondsSinceEpoch;
 
   bool _isLoading = false;
   final List<List<Map<String, dynamic>>> _storiseList = [];
@@ -121,6 +119,7 @@ class StoriesServices extends ChangeNotifier {
     String storyType,
     Duration storyDuration,
   ) async {
+    final dateTime = DateTime.now().microsecondsSinceEpoch;
     var uuid = Uuid();
     final storyId = uuid.v4();
     final docRef = firebaseFirestore
@@ -153,8 +152,8 @@ class StoriesServices extends ChangeNotifier {
     notifyListeners();
   }
 
-  // get list of stories from all user within 1 day of uploading
-  Future<List<List<Map<String, dynamic>>>> getStories() async {
+  // get list of stories from all user within 1 day of
+  Future<List<List<Map<String, dynamic>>>> getFirendsStories() async {
     setLoadingState(true);
 
     final twentyHoursAgo =
@@ -163,55 +162,61 @@ class StoriesServices extends ChangeNotifier {
             .microsecondsSinceEpoch;
     List<List<Map<String, dynamic>>> groupedStoriesList = [];
     Map<String, List<Map<String, dynamic>>> userStoriesMap = {};
-    String? currentUserId = firebaseAuth.currentUser?.uid;
 
-    if (currentUserId != null) {
-      QuerySnapshot currentUserStoriesSnapshot =
-          await firebaseFirestore
-              .collection("users")
-              .doc(currentUserId)
-              .collection("stories")
-              .where("uploading_date", isGreaterThan: twentyHoursAgo)
-              .get();
-
-      if (currentUserStoriesSnapshot.docs.isNotEmpty) {
-        List<Map<String, dynamic>> currentUserStories = [];
-        for (QueryDocumentSnapshot storyDocument
-            in currentUserStoriesSnapshot.docs) {
-          currentUserStories.add(storyDocument.data() as Map<String, dynamic>);
-        }
-        groupedStoriesList.add(currentUserStories);
-        userStoriesMap[currentUserId] = currentUserStories;
-      }
-    }
-
-    QuerySnapshot allStoriesSnapshot =
+    QuerySnapshot storiesSnapshot =
         await firebaseFirestore
             .collectionGroup("stories")
             .where("uploading_date", isGreaterThan: twentyHoursAgo)
             .get();
 
-    for (QueryDocumentSnapshot storyDocument in allStoriesSnapshot.docs) {
+    for (QueryDocumentSnapshot storyDocument in storiesSnapshot.docs) {
       Map<String, dynamic> storyData =
           storyDocument.data() as Map<String, dynamic>;
+
       String userId = storyDocument.reference.parent.parent!.id;
 
-      if (currentUserId == null || userId != currentUserId) {
-        if (!userStoriesMap.containsKey(userId)) {
-          userStoriesMap[userId] = [];
-        }
-        userStoriesMap[userId]!.add(storyData);
+      if (!userStoriesMap.containsKey(userId)) {
+        userStoriesMap[userId] = [];
       }
+
+      userStoriesMap[userId]!.add(storyData);
     }
+
     userStoriesMap.forEach((userId, stories) {
-      if (currentUserId == null || userId != currentUserId) {
+      if (userId != firebaseAuth.currentUser!.uid) {
+        print("firend story");
         groupedStoriesList.add(stories);
+      } else {
+        print("my story");
       }
     });
-
     setLoadingState(false);
     print(groupedStoriesList);
+
     return groupedStoriesList;
+  }
+
+  Future<List<Map<String, dynamic>>> getCurrentUserStories() async {
+    setLoadingState(true);
+
+    final twentyHoursAgo =
+        DateTime.now()
+            .subtract(const Duration(hours: 24))
+            .microsecondsSinceEpoch;
+    List<Map<String, dynamic>> myStories = [];
+    QuerySnapshot storiesSnapshot =
+        await firebaseFirestore
+            .collection("users")
+            .doc(firebaseAuth.currentUser!.uid)
+            .collection("stories")
+            .where("uploading_date", isGreaterThan: twentyHoursAgo)
+            .get();
+    for (QueryDocumentSnapshot storyDocument in storiesSnapshot.docs) {
+      myStories.add(storyDocument.data() as Map<String, dynamic>);
+    }
+    setLoadingState(false);
+
+    return myStories;
   }
 
   markAsViewed(String uploaderId, String storyId) async {
@@ -231,5 +236,22 @@ class StoriesServices extends ChangeNotifier {
                 "viewers": FieldValue.arrayUnion([userData]),
               });
         });
+  }
+
+  int getStoryViewedCount(List<Map<String, dynamic>> userStories) {
+    int viewersCount = 0;
+
+    for (var viewerElement in userStories) {
+      if (viewerElement.containsKey("viewers") &&
+          viewerElement["viewers"] is List) {
+        List viewers = viewerElement["viewers"];
+        for (var user in viewers) {
+          if (user["Uid"] == firebaseAuth.currentUser!.uid) {
+            viewersCount++;
+          }
+        }
+      }
+    }
+    return viewersCount;
   }
 }
